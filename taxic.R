@@ -1,5 +1,8 @@
 halfVisionField <- pi/2
 
+goalVal <- 1
+explorationVal <- goalVal/2
+
 dist <- function(p1,p2){
   sqrt((p1$x - p2$x)^2 + (p1$y - p2$y)^2)
 }
@@ -25,36 +28,39 @@ visible <- function(robot, goal, walls, eps){
  
 }
 
-selectAction <- function(robot, posActions, world, goal){
-  action <- posActions[1]
+taxicVals <- function(robot, posActions, world, goal){
+  actionVals <- rep(0, length(posActions))
   
   if (visible(robot, goal, world.walls, world.eps)){
     print("Taxic")
     # Go to the goal
     # Simulate all actions and minimize distance subject to visibility
     d <- dist(robot,goal)
-    for (posAction in posActions) {
-      newTheta <- (robot$theta + posAction) %% (2 * pi)
+    for (i in seq(1,length(posActions))) {
+      newTheta <- (robot$theta + posActions[i]) %% (2 * pi)
       nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
       newRob <- data.frame(x=nPos[1], y=nPos[2], theta=newTheta)
       if (visible(newRob, goal, world.walls, world.eps) && dist(newRob,goal) < d){
-        action <- posAction
+        action <- i
         d <- dist(newRob,goal)
       }
     }
+    actionVals[action] <- goalVal
   } else {
     print("Exploring")
     # Explore
     # Favor forward motions
     if (0 %in% posActions)
       if (runif(1) > .8)
-        action <- 0
+        actionVals[match(0, posActions)] <- explorationVal
     else{
-      posActions <- posActions[posActions != 0]
-      action <- posActions[[sample(1:length(posActions), 1)]]
+      index <- sample(1:length(posActions), 1)
+      while (posActions[index] == 0)
+        index <- sample(1:length(posActions), 1)
+      actionVals[index] <- explorationVal
     }
     else
-      action <- posActions[[sample(1:length(posActions), 1)]]
+      actionVals[sample(1:length(posActions), 1)] <- explorationVal
   }
-  action
+  actionVals
 }
