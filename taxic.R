@@ -1,7 +1,10 @@
 halfVisionField <- pi/2
+angleEps <- 1e-10
 
 goalVal <- 1
 explorationVal <- goalVal/2
+
+
 
 dist <- function(p1,p2){
   sqrt((p1$x - p2$x)^2 + (p1$y - p2$y)^2)
@@ -23,7 +26,7 @@ visible <- function(robot, goal, walls, eps){
     angleOrientDiff <- atan2(sin(angleToGoal-robot$theta),cos(robot$theta-angleToGoal))
 #     print (angleOrientDiff)
 #     print((abs(angleOrientDiff) <= halfVisionField))
-    (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= halfVisionField))
+    (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)))
   }
  
 }
