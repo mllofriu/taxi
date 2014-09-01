@@ -64,6 +64,22 @@ drawPlaces <- function(places){
   geom_text(data=places, aes(x=x,y=y,label=label), size = 10)
 }
 
+# Draw ql value
+drawValue <- function(value) {
+  sData <- data.frame()
+  for (i in 1:dim(value)[1]){
+    for (j in 1:dim(value)[2]){
+      m <- max (value[i,j,1:4])
+      
+      sData <- rbind(sData, data.frame(
+        xmin = i - 1 - halfSquareSide, xmax =  i - 1 + halfSquareSide,
+        ymin = j - 1 - halfSquareSide, ymax = j - 1 + halfSquareSide, fill = m))
+    }
+  }
+  list(geom_rect(data = sData, aes(xmin=xmin,xmax=xmax, ymin=ymin,ymax=ymax,fill=fill), alpha=.5)
+       , scale_fill_gradient(limits=c(0,2),low='white', high='blue'))
+}
+
 # Blank theme
 blank_theme <- function() {
   theme(panel.grid.major = element_blank(),
@@ -80,7 +96,7 @@ blank_theme <- function() {
 }
 
 # Draw the world and robot
-draw <- function(robot, world){
+draw <- function(robot, world, value=NULL){
   # If there is no base plot, replot the whole thing
   if (is.null(basePlot)){
     ggplot() +
@@ -91,7 +107,17 @@ draw <- function(robot, world){
       blank_theme()
   } else {
     # use the old base plot to avoid recalculating
-    basePlot + drawRobot(robot)
+    if (is.null(value))
+      basePlot + drawRobot(robot)
+    else {
+      ggplot() +
+        drawValue(value) +
+        drawGrid(world.xDim,world.yDim) +
+        drawWalls(world.walls) +
+        drawPlaces(world.places) +
+        drawRobot(robot) +
+        blank_theme()
+    }
   }
   
 }
