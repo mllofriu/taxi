@@ -40,7 +40,8 @@ taxicVals <- function(robot, posActions, world, goal){
     # Simulate all actions and minimize distance subject to visibility
     d <- dist(robot,goal)
     for (i in seq(1,length(posActions))) {
-      newTheta <- (robot$theta + posActions[i]) %% (2 * pi)
+#       newTheta <- (robot$theta + posActions[i]) %% (2 * pi) # Relative actions
+      newTheta <- (posActions[i]) %% (2 * pi)
       nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
       newRob <- data.frame(x=nPos[1], y=nPos[2], theta=newTheta)
       if (visible(newRob, goal, world.walls, world.eps) && dist(newRob,goal) < d){
@@ -53,16 +54,18 @@ taxicVals <- function(robot, posActions, world, goal){
     print("Exploring")
     # Explore
     # Favor forward motions
-    if (0 %in% posActions)
+#     if (0 %in% posActions)
+    # If any action is close to current heading
+    if (any(abs(posActions - robot$theta) < angleEps)){
       if (runif(1) > .8)
         actionVals[match(0, posActions)] <- explorationVal
-    else{
-      index <- sample(1:length(posActions), 1)
-      while (posActions[index] == 0)
+      else{
         index <- sample(1:length(posActions), 1)
-      actionVals[index] <- explorationVal
-    }
-    else
+        while (posActions[index] == 0)
+          index <- sample(1:length(posActions), 1)
+        actionVals[index] <- explorationVal
+      }
+    } else
       actionVals[sample(1:length(posActions), 1)] <- explorationVal
   }
   actionVals

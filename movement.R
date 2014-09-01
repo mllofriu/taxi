@@ -16,7 +16,8 @@ possibleActions <- function(robot, world){
   for (posAction in actions) {
     # Simulate the action
     # New theta
-    newTheta <- (robot$theta + posAction) %% (2 * pi)
+#     newTheta <- (robot$theta + posAction) %% (2 * pi) # Actions are relative
+    newTheta <- posAction # Actions are absolute
     # New position
     nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
     # The path traveled
@@ -36,7 +37,7 @@ possibleActions <- function(robot, world){
 # Move the robot, rotating action degrees and advancing
 move <- function(robot, action){
   # Rotated robot
-  newRob <- data.frame(x=robot$x, y=robot$y, theta=(robot$theta+action) %% (2*pi))
+  newRob <- data.frame(x=robot$x, y=robot$y, theta=(action) %% (2*pi))
   # Move it
   newRob$x <- newRob$x + stepSize * cos(newRob$theta)
   newRob$y <- newRob$y + stepSize * sin(newRob$theta)
