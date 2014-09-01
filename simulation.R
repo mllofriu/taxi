@@ -1,7 +1,8 @@
 source('graphics.R')
 source('movement.R')
+source('taxic.R')
 
-robot <- data.frame(x=2,y=2,theta=pi/2)
+robot <- data.frame(x=0,y=4,theta=pi/2)
 
 world.halfSquareSide <- .5
 world.robotDiam <- halfSquareSide
@@ -29,18 +30,18 @@ world.walls <- Lines(list(
 
 draw(robot,world)
 
-
-while (!(abs(robot$x - 0) < eps && abs(robot$y - 4) < eps)){
+goal <- data.frame(x=4, y=4)
+while (!(dist(robot,goal)< eps)){
   dev.flush()
   
   posActions <- possibleActions(robot, world)
 #   print(posActions)
-  action <- selectAction(posActions)
+  action <- selectAction(robot,posActions, world, goal)
 #   print(action)
   robot <- move(robot, action)
   #draw(robot,walls) 
   print(draw(robot, world),newpage=F)
-  print(robot)
+#   print(robot)
 #   Sys.sleep(.1)
 }
 

@@ -24,18 +24,6 @@ possibleActions <- function(robot, world){
   posActions
 }
 
-selectAction <- function(posActions){
-  if (0 %in% posActions)
-    if (runif(1) > .8)
-      0
-    else{
-      posActions <- posActions[posActions != 0]
-      posActions[[sample(1:length(posActions), 1)]]
-    }
-  else
-    posActions[[sample(1:length(posActions), 1)]]
-}
-
 move <- function(robot, action){
   # Rotated robot
   newRob <- data.frame(x=robot$x, y=robot$y, theta=(robot$theta+action) %% (2*pi))
