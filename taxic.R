@@ -35,7 +35,7 @@ taxicVals <- function(robot, posActions, world, goal){
   actionVals <- rep(0, length(posActions))
   
   if (visible(robot, goal, world.walls, world.eps)){
-    print("Taxic")
+    #print("Taxic")
     # Go to the goal
     # Simulate all actions and minimize distance subject to visibility
     d <- dist(robot,goal)
@@ -51,7 +51,7 @@ taxicVals <- function(robot, posActions, world, goal){
     }
     actionVals[action] <- goalVal
   } else {
-    print("Exploring")
+  #  print("Exploring")
     # Explore
     # Favor forward motions
 #     if (0 %in% posActions)

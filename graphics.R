@@ -18,11 +18,11 @@ drawRobot <- function(robot){
   orientLine <- data.frame(
     x=robot$x, 
     y=robot$y,
-    xend=robot$x+robotDiam/2*cos(robot$theta),
-    yend=robot$y+robotDiam/2*sin(robot$theta))
+    xend=robot$x+world.robotDiam/2*cos(robot$theta),
+    yend=robot$y+world.robotDiam/2*sin(robot$theta))
   
   # Return both the line and a circle
-  list(geom_path(data=circleFun(c(robot$x,robot$y), diameter=robotDiam), aes(x=x,y=y), color="gold4"),
+  list(geom_path(data=circleFun(c(robot$x,robot$y), diameter=world.robotDiam), aes(x=x,y=y), color="gold4"),
     geom_segment(data=orientLine, aes(x=x,y=y,xend=xend,yend=yend), color="gold4"))
 # list(geom_point(aes(x=x, y=y), data=robot, size=30, shape=1, color="gold4"),
 #          geom_segment(data=orientLine, aes(x=x,y=y,xend=xend,yend=yend),color="gold4"))
@@ -32,8 +32,8 @@ drawRobot <- function(robot){
 # Draw the grid of the world
 drawGrid <- function(xdim, ydim){
   # The values of the line-ends
-  hVals <- seq(-halfSquareSide,((xdim-1)+halfSquareSide), by=2*halfSquareSide)
-  vVals <- seq(-halfSquareSide,((ydim-1)+halfSquareSide), by=2*halfSquareSide)
+  hVals <- seq(-world.halfSquareSide,((xdim-1)+world.halfSquareSide), by=2*world.halfSquareSide)
+  vVals <- seq(-world.halfSquareSide,((ydim-1)+world.halfSquareSide), by=2*world.halfSquareSide)
   # Horizontal and vertical lines
   hLines <- data.frame(t(sapply(hVals, 
                                 function(y) {
@@ -67,15 +67,15 @@ drawPlaces <- function(places){
 # Draw ql value
 drawValue <- function(value) {
   sData <- data.frame()
-  for (i in 1:dim(value)[1]){
-    for (j in 1:dim(value)[2]){
-      m <- max (value[i,j,1:4])
-      
+  for (i in 0:4){
+    for (j in 0:4){
+      m <- max (getQLVals(data.frame(x=i,y=j,theta=0),0:3 * pi/2,value))
       sData <- rbind(sData, data.frame(
-        xmin = i - 1 - halfSquareSide, xmax =  i - 1 + halfSquareSide,
-        ymin = j - 1 - halfSquareSide, ymax = j - 1 + halfSquareSide, fill = m))
+        xmin = i - world.halfSquareSide, xmax =  i + world.halfSquareSide,
+        ymin = i - world.halfSquareSide, ymax = j + world.halfSquareSide, fill = m))
     }
   }
+  print(sData$fill)
   list(geom_rect(data = sData, aes(xmin=xmin,xmax=xmax, ymin=ymin,ymax=ymax,fill=fill), alpha=.5)
        , scale_fill_gradient(limits=c(0,2),low='white', high='blue'))
 }
