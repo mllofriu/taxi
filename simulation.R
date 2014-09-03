@@ -1,5 +1,7 @@
-require('sp')
-require('rgeos')
+library('sp')
+library('rgeos')
+
+library('doParallel')
 
 source('graphics.R')
 source('movement.R')
@@ -7,11 +9,10 @@ source('taxic.R')
 source('ql.R')
 #source('msql.R')
 
-numTrials <- 20
-numEpisodes <- 10
 
-# Robot position and orientation
-robot <- data.frame(x=4,y=0,theta=pi/2)
+
+numTrials <- 20
+numEpisodes <- 20
 
 # World object
 # Grid and robot size parameters
@@ -45,13 +46,16 @@ world.walls <- Lines(list(
 # Set a goal - TODO: pick from places
 goal <- data.frame(x=0, y=4)
 # Plot opt.
-saveBasePlot(world)
-quartz("Maze", 5, 5, antialias = T)
+# saveBasePlot(world)
+# quartz("Maze", 5, 5, antialias = T)
 # For each episode
 runtimes <- expand.grid(trial=1:numTrials, episode=1:numEpisodes)
-print(runtimes)
-for (trial in 1:numTrials){
+
+cl <- makeCluster(detectCores())
+registerDoParallel(cl)
+qlRT <- foreach (trial=1:numTrials, .packages=c('sp','rgeos', 'ggplot2'), .combine=rbind) %dopar%{
   # Init ql value
+
   value <- initValue(world.xDim, world.yDim, 4)
   for (episode in 1:numEpisodes){
     steps <- 0
@@ -59,10 +63,10 @@ for (trial in 1:numTrials){
     # While the robot has not reach the goal
     while (!(dist(robot,goal)< world.eps)){
       # Draw the world
-      if (visible(robot, goal, world.walls, world.eps) || 
-            all(robot == data.frame(x=4,y=0,theta=pi/2)))
-        print(draw(robot, world,value),newpage=F)
-  #     print(robot)
+#       if (visible(robot, goal, world.walls, world.eps) || 
+#             all(robot == data.frame(x=4,y=0,theta=pi/2)))
+#         print(draw(robot, world,value),newpage=F)
+#       print(robot)
       # Get affordances
       posActions <- possibleActions(robot, world)
       # Get taxic values
@@ -89,5 +93,9 @@ for (trial in 1:numTrials){
 #     print(runtimes)
   }
   cat ("Trial ", trial, " finished\n")
+  runtimes[!is.na(runtimes$steps),]
 }
 
+qlRTSum <- ddply(qlRT, .(episode), summarise, meanSteps = mean(steps))
+save(qlRTSum, qlRT, file='runtimes.Rdata')
+qplot(episode, meanSteps, data=qlRTSum)
