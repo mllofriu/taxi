@@ -69,15 +69,15 @@ drawValue <- function(value) {
   sData <- data.frame()
   for (i in 0:4){
     for (j in 0:4){
-      m <- max (getQLVals(data.frame(x=i,y=j,theta=0),0:3 * pi/2,value))
+      m <- min(max (getQLVals(data.frame(x=i,y=j),0:3,value)/.1),1)
       sData <- rbind(sData, data.frame(
         xmin = i - world.halfSquareSide, xmax =  i + world.halfSquareSide,
-        ymin = i - world.halfSquareSide, ymax = j + world.halfSquareSide, fill = m))
+        ymin = j - world.halfSquareSide, ymax = j + world.halfSquareSide, fill = m))
     }
   }
-  print(sData$fill)
+#   print(sData$fill)
   list(geom_rect(data = sData, aes(xmin=xmin,xmax=xmax, ymin=ymin,ymax=ymax,fill=fill), alpha=.5)
-       , scale_fill_gradient(limits=c(0,2),low='white', high='blue'))
+       , scale_fill_gradient(limits=c(0,1),low='white', high='blue'))
 }
 
 # Blank theme

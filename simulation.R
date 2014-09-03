@@ -4,8 +4,11 @@ require('rgeos')
 source('graphics.R')
 source('movement.R')
 source('taxic.R')
-#source('ql.R')
-source('msql.R')
+source('ql.R')
+#source('msql.R')
+
+numTrials <- 20
+numEpisodes <- 10
 
 # Robot position and orientation
 robot <- data.frame(x=4,y=0,theta=pi/2)
@@ -44,35 +47,47 @@ goal <- data.frame(x=0, y=4)
 # Plot opt.
 saveBasePlot(world)
 quartz("Maze", 5, 5, antialias = T)
-# Init ql value
-value <- initValue(world.xDim, world.yDim, 4)
 # For each episode
-for (i in seq(1,100)){
-  robot <- data.frame(x=2,y=0,theta=pi/2)
-  # While the robot has not reach the goal
-  while (!(dist(robot,goal)< world.eps)){
-    # Draw the world
-#     if (i > 3)
-      print(draw(robot, world,value),newPage=F)
-    print(robot)
-    # Get affordances
-    posActions <- possibleActions(robot, world)
-    # Get taxic values
-    tVals <- taxicVals(robot,posActions, world, goal)
-    # Get QL values
-    qlVals <- getQLVals(robot, posActions, value)
-    # Get total values as the sum
-    actionVals <- tVals + qlVals
-    # Select maximum value action
-    action <- posActions[match(max(actionVals), actionVals)]
-    # Move the robot according to picked action
-    postRobot <- move(robot, action)
-    # Compute Ql reward
-    r <- reward(postRobot, goal, world.eps)
-    # Update Ql Value
-    value <- update(robot, postRobot, action, value, r)
-    # Update robot
-    robot <- postRobot
+runtimes <- expand.grid(trial=1:numTrials, episode=1:numEpisodes)
+print(runtimes)
+for (trial in 1:numTrials){
+  # Init ql value
+  value <- initValue(world.xDim, world.yDim, 4)
+  for (episode in 1:numEpisodes){
+    steps <- 0
+    robot <- data.frame(x=4,y=0,theta=pi/2)
+    # While the robot has not reach the goal
+    while (!(dist(robot,goal)< world.eps)){
+      # Draw the world
+      if (visible(robot, goal, world.walls, world.eps) || 
+            all(robot == data.frame(x=4,y=0,theta=pi/2)))
+        print(draw(robot, world,value),newpage=F)
+  #     print(robot)
+      # Get affordances
+      posActions <- possibleActions(robot, world)
+      # Get taxic values
+      tVals <- taxicVals(robot,posActions, world, goal)
+      # Get QL values
+      # Only get action values from the small ones
+      qlVals <- getQLActionVals(robot, posActions, value)
+      # Get total values as the sum
+      actionVals <- tVals + qlVals
+      # Select maximum value action
+      action <- posActions[match(max(actionVals), actionVals)]
+      # Move the robot according to picked action
+      postRobot <- move(robot, action)
+      # Compute Ql reward
+      r <- reward(postRobot, goal, world.eps)
+      # Update Ql Value
+      value <- update(robot, postRobot, action, value, r)
+      # Update robot
+      robot <- postRobot
+      # Increase step count
+      steps <- steps + 1
+    }
+    runtimes[runtimes$trial == trial & runtimes$episode == episode, "steps"] <- steps
+#     print(runtimes)
   }
+  cat ("Trial ", trial, " finished\n")
 }
 

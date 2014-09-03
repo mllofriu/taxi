@@ -18,6 +18,8 @@ getQLVals <- function(robot, posActions, value){
   stateV(robot$x, robot$y, posActions, value)
 }
 
+getQLActionVals <- getQLVals
+
 update <- function(preRobot, posRobot, action, value, reward){
   val <- stateV(preRobot$x, preRobot$y, action, value)
   value[round(preRobot$x) + 1, round(preRobot$y) + 1, round(((action + 2*pi) / (pi/2))) %% 4 + 1] <-

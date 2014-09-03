@@ -3,7 +3,7 @@
 stepSize <- 1
 
 # Possible actions (angles)
-actions <- c(0, pi/2, pi, -pi/2)
+actions <- 0:3
 
 # Get the possible actions, which dont go through walls
 possibleActions <- function(robot, world){
@@ -17,7 +17,7 @@ possibleActions <- function(robot, world){
     # Simulate the action
     # New theta
 #     newTheta <- (robot$theta + posAction) %% (2 * pi) # Actions are relative
-    newTheta <- posAction # Actions are absolute
+    newTheta <- posAction * pi/2 # Actions are absolute
     # New position
     nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
     # The path traveled
@@ -37,7 +37,7 @@ possibleActions <- function(robot, world){
 # Move the robot, rotating action degrees and advancing
 move <- function(robot, action){
   # Rotated robot
-  newRob <- data.frame(x=robot$x, y=robot$y, theta=(action) %% (2*pi))
+  newRob <- data.frame(x=robot$x, y=robot$y, theta=(action * pi/2) %% (2*pi))
   # Move it
   newRob$x <- newRob$x + stepSize * cos(newRob$theta)
   newRob$y <- newRob$y + stepSize * sin(newRob$theta)
