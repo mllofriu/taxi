@@ -1,14 +1,41 @@
 
 alpha <- .8
-gamma <- .95
-goalReward <- 2
+gamma <- 1
+goalReward <- 100
 nonGoalReward <- 0
 
 
-initValue <- function(dimx, dimy, numActions){
-  value <- expand.grid(x=0:4, y=0:4, type=factor(x=c("small", "large")), action=0:3)
+initValue <- function(dimx, dimy, numActions, world){
+  value <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), type=factor(x=c("small", "large")), action=0:3)
   value$value <- 0
-  value
+  
+  # Get SpatialLines object for the walls
+  wallssp <- SpatialLines(list(world.walls))
+  
+  # Erase walls
+  largeAndHitsWalls <- apply(value, 1, function (state) {
+    x <- as.numeric(state[1])
+    y <- as.numeric(state[2])
+    type <- state[3]
+    
+    if (type == "large"){
+      ventralConnectLines <- Lines(list(
+        Line(rbind(c(x-1,y), c(x,y))),
+        Line(rbind(c(x,y), c(x+1,y))),
+        Line(rbind(c(x,y-1), c(x,y))),
+        Line(rbind(c(x,y), c(x,y+1)))
+      ),
+      "ventralConnect")
+      gIntersects(wallssp, SpatialLines(list(ventralConnectLines)))
+    } else
+      FALSE
+    })
+  
+  # Return only those that are not large or that do not hit a wall
+#   print(unlist(largeAndHitsWalls))
+  
+  value[!largeAndHitsWalls,]
+#   value
 }
 
 
@@ -26,6 +53,7 @@ update <- function(preRobot, posRobot, action, value, reward){
     
     # Unnormalized version of activation
     activation <- getActivation(preRobot$x, preRobot$y, x, y, type)
+
     activation * (val + alpha * (reward + gamma * maxVal - val)) + (1-activation) * val 
   })
 
@@ -47,9 +75,11 @@ getActivation <- function(currX, currY, x, y, type){
       activation <- 0
   } else if (type == "large"){
     if (currX == x && currY == y){
-      activation <- .4
+      activation <- 1
     } else if (dist(list(x=x,y=y), list(x=currX, y=currY)) <= 1){ 
-      activation <- .15
+      activation <- .8
+    }  else if (dist(list(x=x,y=y), list(x=currX, y=currY)) <= sqrt(2)){ 
+      activation <- .7
     } else {
       activation <- 0
     }
@@ -69,7 +99,7 @@ stateV <- function(currX, currY, action, value) {
       stateVal <- as.numeric(s[5])
       
       # Normalize when calculating total value
-      activation <- getActivation(currX, currY, x, y, type) / 2
+      activation <- getActivation(currX, currY, x, y, type) / 10
       
       stateVal * activation
     })
@@ -84,7 +114,7 @@ getQLVals <- function(robot, posActions, value){
 
 getQLActionVals <- function(robot, posActions, value){
   # Get the value for each action
-  sapply(posActions, function(action) stateV(robot$x, robot$y,action, value[value$type=="small",]))
+  sapply(posActions, function(action) stateV(robot$x, robot$y,action, value))
   #stateV(robot$x, robot$y, posActions, value)
 }
 
@@ -94,4 +124,8 @@ reward <- function(postRobot, goal, eps){
     goalReward
   else 
     nonGoalReward
+}
+
+getMethod <- function(){
+  "mlql"
 }

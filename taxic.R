@@ -56,17 +56,20 @@ taxicVals <- function(robot, posActions, world, goal){
     # Favor forward motions
 #     if (0 %in% posActions)
     # If any action is close to current heading
-    if (any(abs(posActions * pi/2 - robot$theta) < angleEps)){
-      if (runif(1) < .5)
-        actionVals[match(0, posActions)] <- explorationVal
-      else{
-        index <- sample(1:length(posActions), 1)
-        while (posActions[index] == 0)
-          index <- sample(1:length(posActions), 1)
-        actionVals[index] <- explorationVal
-      }
-    } else
-      actionVals[sample(1:length(posActions), 1)] <- explorationVal
+#     if (any(abs(posActions * pi/2 - (robot$theta%%(2*pi))) < angleEps)){
+# #       print("Able to continue")
+#       if (runif(1) < .25){
+#         # Assign a good value to it
+#         actionVals[abs(posActions * pi/2 - (robot$theta%%(2*pi))) < angleEps] <- explorationVal
+#       }else{
+#         posActions <- posActions[!abs(posActions * pi/2 - (robot$theta%%(2*pi))) < angleEps]
+#         actionVals[sample(1:length(posActions), 1)] <- explorationVal
+#       }
+#     } else {
+# #       print ("Not able to continue")
+#       actionVals[sample(1:length(posActions), 1)] <- explorationVal
+#     }
+    actionVals[sample(1:length(posActions), 1)] <- explorationVal
   }
   actionVals
 }

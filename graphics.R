@@ -67,8 +67,8 @@ drawPlaces <- function(places){
 # Draw ql value
 drawValue <- function(value) {
   sData <- data.frame()
-  for (i in 0:4){
-    for (j in 0:4){
+  for (i in 0:9){
+    for (j in 0:9){
       m <- min(max (getQLVals(data.frame(x=i,y=j),0:3,value)/.1),1)
       sData <- rbind(sData, data.frame(
         xmin = i - world.halfSquareSide, xmax =  i + world.halfSquareSide,
