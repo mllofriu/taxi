@@ -127,5 +127,5 @@ reward <- function(postRobot, goal, eps){
 }
 
 getMethod <- function(){
-  "mlql"
+  "Multi-Scale QL"
 }

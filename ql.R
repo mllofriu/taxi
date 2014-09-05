@@ -38,5 +38,5 @@ reward <- function(postRobot, goal, eps){
 }
 
 getMethod <- function(){
-  "ql"
+  "Normal QL"
 }

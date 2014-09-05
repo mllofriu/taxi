@@ -10,10 +10,10 @@ source('taxic.R')
 #  source('ql.R')
 source('msql.R')
 
-showPlots <- TRUE
+showPlots <- FALSE
 
-numTrials <- 1
-numEpisodes <- 10
+numTrials <- 100
+numEpisodes <- 30
 
 # World object
 # Grid and robot size parameters
@@ -73,7 +73,7 @@ rte <- foreach (method=c('multiscale','normal'), .combine=rbind) %do% {
   else
     source('msql.R')
   
-  foreach (trial=1:numTrials, .packages=c('sp','rgeos', 'ggplot2'), .combine=rbind, .export=c('%do%', 'foreach')) %do%{
+  foreach (trial=1:numTrials, .packages=c('sp','rgeos', 'ggplot2'), .combine=rbind, .export=c('%do%', 'foreach')) %dopar%{
 #   for (trial in 1:numTrials)  {
     # Init ql value
     value <- initValue(world.xDim, world.yDim, 4, world)
@@ -87,12 +87,8 @@ rte <- foreach (method=c('multiscale','normal'), .combine=rbind) %do% {
         if (showPlots){
           #         visible(robot, goal, world.walls, world.eps) ||
           if ( 
-            all(robot == data.frame(x=9,y=0,theta=pi/2))){
-            pdf(paste(getMethod(),'.',trial,'.',episode,'.pdf',sep=''))
+            all(robot == data.frame(x=9,y=0,theta=pi/2)))
             print(draw(robot, world,value),newpage=F)
-            dev.off()
-          }
-           
         }
         #       
         print(robot)
@@ -139,11 +135,8 @@ rteSum <- ddply(rte, .(episode, method), summarise, meanSteps = mean(steps))
 rte.aov <- aov(steps ~ factor(episode):method, data=rte)
 tuk <- TukeyHSD(rte.aov)
 save (rte, file="rte.Rdata")
-names(rteSum)[names(rteSum) == "method"] <- "Method"
-pdf('resultPrelim090314.pdf')
-qplot(episode, meanSteps, data=rteSum, geom=c('point', 'line'), color=Method) +
-  ylab("Num. of Steps") + xlab("Episode") + 
-  theme(legend.text = element_text(size=16), legend.title = element_text(size=16))
+pdf('rts.pdf')
+qplot(episode, meanSteps, data=rteSum, geom=c('point', 'line'), color=method)
 dev.off()
 
 

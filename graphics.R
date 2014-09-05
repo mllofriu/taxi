@@ -133,3 +133,22 @@ saveBasePlot <- function(world){
 
 # draw(data.frame(x=1,y=1,theta=0))
 
+# drawActivation <- function() {
+#   sData <- data.frame()
+#   
+#   x=c(3)
+#   y=c(3)
+#   for (i in x){
+#     for (j in y){
+#       m <- getActivation(i,j,3,3,"small")
+#       sData <- rbind(sData, data.frame(
+#         xmin = i - world.halfSquareSide, xmax =  i + world.halfSquareSide,
+#         ymin = j - world.halfSquareSide, ymax = j + world.halfSquareSide, fill = m))
+#     }
+#   }
+#   #   print(sData$fill)
+#   list(geom_rect(data = sData, aes(xmin=xmin,xmax=xmax, ymin=ymin,ymax=ymax,fill=fill), alpha=.5)
+#        , scale_fill_gradient(limits=c(0,1),low='white', high='red'))
+# }
+
+
