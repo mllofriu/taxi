@@ -52,11 +52,7 @@ goal <- data.frame(x=0, y=9)
 
 
 # Plot opt.
-if (showPlots){
-  saveBasePlot(world)
-  
-}
-#quartz("Maze", 5, 5, antialias = T)
+quartz("taxi", 5, 5)
 
 # For each episode
 runtimes <- expand.grid(trial=1:numTrials, episode=1:numEpisodes)
@@ -86,13 +82,11 @@ rte <- foreach (method=c('multiscale','normal'), .combine=rbind) %do% {
         # Draw the world
         if (showPlots){
           #         visible(robot, goal, world.walls, world.eps) ||
-          if ( 
-            all(robot == data.frame(x=9,y=0,theta=pi/2))){
-            pdf(paste(getMethod(),'.',trial,'.',episode,'.pdf',sep=''))
-            print(draw(robot, world,value),newpage=F)
-            dev.off()
-          }
-           
+#           if ( 
+#             all(robot == data.frame(x=9,y=0,theta=pi/2))){
+            if(steps %% 10 == 0)
+            print(system.time(draw(robot, world, value)))
+#           }
         }
         #       
         print(robot)

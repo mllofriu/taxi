@@ -92,7 +92,9 @@ stateV <- function(currX, currY, action, value) {
   currX <- round(currX)
   currY <- round(currY)
   sum(
-    apply(value[value$action==action,],1, function(s){
+    # Only apply to nearby cells
+    apply(value[abs(value$x-currX) <= 1 & abs(value$y - currY) <= 1 &
+                  value$action==action,],1, function(s){
       x <- as.numeric(s[1])
       y <- as.numeric(s[2])
       type <- s[3]
