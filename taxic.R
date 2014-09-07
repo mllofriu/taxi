@@ -2,7 +2,7 @@ halfVisionField <- pi/2
 angleEps <- 1e-10
 
 goalVal <- 1
-explorationVal <- .1
+explorationVal <- .5
 
 
 
@@ -10,17 +10,17 @@ dist <- function(p1,p2){
   sqrt((p1$x - p2$x)^2 + (p1$y - p2$y)^2)
 }
 
-visible <- function(robot, goal, walls, eps){
+visible <- function(robot, place, walls, eps){
   # If they are the same point
-  if (dist(robot, goal) < eps)
-    T
+  if (dist(robot, place) < eps)
+    FALSE
   else {
     # Check line of sight
     wallssp <- SpatialLines(list(walls))
-    path <- Line(rbind(c(robot$x, robot$y),c(goal$x, goal$y)))
+    path <- Line(rbind(c(robot$x, robot$y),c(place$x, place$y)))
     pathsp <- SpatialLines(list(Lines(list(path),"path")))
-    # Check angle to goal in visual range
-    angleToGoal <- atan2(goal$y - robot$y, goal$x - robot$x)
+    # Check angle to place in visual range
+    angleToGoal <- atan2(place$y - robot$y, place$x - robot$x)
 #     print(angleToGoal)
 #     print(robot$theta)
     angleOrientDiff <- atan2(sin(angleToGoal-robot$theta),cos(robot$theta-angleToGoal))
@@ -31,45 +31,36 @@ visible <- function(robot, goal, walls, eps){
  
 }
 
-taxicVals <- function(robot, posActions, world, goal){
+taxicVals <- function(robot, posActions, places){
   actionVals <- rep(0, length(posActions))
   
-  if (visible(robot, goal, world.walls, world.eps)){
-#     print("Taxic")
-    # Go to the goal
-    # Simulate all actions and minimize distance subject to visibility
-    d <- dist(robot,goal)
-    for (i in seq(1,length(posActions))) {
-#       newTheta <- (robot$theta + posActions[i]) %% (2 * pi) # Relative actions
-      newTheta <- (posActions[i] * pi/2)
-      nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
-      newRob <- data.frame(x=nPos[1], y=nPos[2], theta=newTheta)
-      if (visible(newRob, goal, world.walls, world.eps) && dist(newRob,goal) < d){
-        action <- i
-        d <- dist(newRob,goal)
+  for (p in 1:4){
+    place <- places[p,]
+    if (visible(robot, place, world.walls, world.eps)){
+  #     print("Taxic")
+      # Go to the goal
+      # Simulate all actions and minimize distance subject to visibility
+      d <- dist(robot,place)
+      for (i in seq(1,length(posActions))) {
+  #       newTheta <- (robot$theta + posActions[i]) %% (2 * pi) # Relative actions
+        newTheta <- (posActions[i] * pi/2)
+        nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
+        newRob <- data.frame(x=nPos[1], y=nPos[2], theta=newTheta)
+        # IF arrived or closer
+        if (dist(newRob,place) < world.eps || 
+              (visible(newRob, place, world.walls, world.eps) 
+               && dist(newRob,place) < d)){
+          action <- i
+          d <- dist(newRob,place)
+        }
       }
-    }
-    actionVals[action] <- goalVal
-  } else {
-#    print("Exploring")
-    # Explore
-    # Favor forward motions
-#     if (0 %in% posActions)
-    # If any action is close to current heading
-#     if (any(abs(posActions * pi/2 - (robot$theta%%(2*pi))) < angleEps)){
-# #       print("Able to continue")
-#       if (runif(1) < .25){
-#         # Assign a good value to it
-#         actionVals[abs(posActions * pi/2 - (robot$theta%%(2*pi))) < angleEps] <- explorationVal
-#       }else{
-#         posActions <- posActions[!abs(posActions * pi/2 - (robot$theta%%(2*pi))) < angleEps]
-#         actionVals[sample(1:length(posActions), 1)] <- explorationVal
-#       }
-#     } else {
-# #       print ("Not able to continue")
-#       actionVals[sample(1:length(posActions), 1)] <- explorationVal
-#     }
-    actionVals[sample(1:length(posActions), 1)] <- explorationVal
+      actionVals[action] <- goalVal
+    } 
   }
+
+  randomAction <- sample(1:length(posActions),1)
+  actionVals[randomAction] <- actionVals[randomAction] + explorationVal
+
+
   actionVals
 }

@@ -5,8 +5,8 @@ goalReward <- 100
 nonGoalReward <- 0
 
 
-initValue <- function(dimx, dimy, numActions, world){
-  value <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), type=factor(x=c("small", "large")), action=0:3)
+initValue <- function(dimx, dimy, numGoals, numActions){
+  value <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), goal=1:(numGoals), type=factor(x=c("small", "large")), action=0:3)
   value$value <- 0
   
   # Get SpatialLines object for the walls
@@ -16,7 +16,7 @@ initValue <- function(dimx, dimy, numActions, world){
   largeAndHitsWalls <- apply(value, 1, function (state) {
     x <- as.numeric(state[1])
     y <- as.numeric(state[2])
-    type <- state[3]
+    type <- state[4]
     
     if (type == "large"){
       ventralConnectLines <- Lines(list(
@@ -39,23 +39,27 @@ initValue <- function(dimx, dimy, numActions, world){
 }
 
 
-update <- function(preRobot, posRobot, action, value, reward){
+update <- function(preRobot, posRobot, goal, action, value, reward, taxicBefore, maxValAfter){
   # Get the max action for the robot after movement
   # Only get value from large cells
-  maxVal <- max(getQLVals(posRobot,0:3,value[]))
+#   maxVal <- max(getQLVals(posRobot,goal,0:3,value))
   
-  value[value$action==action,5] <- apply(value[value$action==action,],1, function (state){
-    x <- as.numeric(state[1])
-    y <- as.numeric(state[2])
-    type <- state[3]
-    action <- as.numeric(state[4])
-    val <- as.numeric(state[5])
-    
-    # Unnormalized version of activation
-    activation <- getActivation(preRobot$x, preRobot$y, x, y, type)
-
-    activation * (val + alpha * (reward + gamma * maxVal - val)) + (1-activation) * val 
-  })
+  
+  value[value$action==action & value$goal == goal,'value'] <- apply(
+    value[value$action==action & value$goal == goal,],1,
+    function (state){
+      x <- as.numeric(state[1])
+      y <- as.numeric(state[2])
+      type <- state[4]
+      action <- as.numeric(state[5])
+      val <- as.numeric(state[6])
+      
+      # Unnormalized version of activation
+      activation <- getActivation(preRobot$x, preRobot$y, x, y, type)
+  
+      activation * (val + alpha * (reward + gamma * (maxValAfter) - (val+taxicBefore))) + (1-activation) * val 
+   }
+  )
 
   value
 }
@@ -88,17 +92,18 @@ getActivation <- function(currX, currY, x, y, type){
   activation
 }
 
-stateV <- function(currX, currY, action, value) {
+stateV <- function(currX, currY,goal, action, value) {
   currX <- round(currX)
   currY <- round(currY)
   sum(
     # Only apply to nearby cells
     apply(value[abs(value$x-currX) <= 1 & abs(value$y - currY) <= 1 &
-                  value$action==action,],1, function(s){
+                  value$action==action & value$goal == goal,],1, function(s){
       x <- as.numeric(s[1])
       y <- as.numeric(s[2])
-      type <- s[3]
-      stateVal <- as.numeric(s[5])
+      type <- s[4]
+#       cat('type is ', type, '\n')
+      stateVal <- as.numeric(s[6])
       
       # Normalize when calculating total value
       activation <- getActivation(currX, currY, x, y, type) / 10
@@ -108,21 +113,21 @@ stateV <- function(currX, currY, action, value) {
   )
 }
 
-getQLVals <- function(robot, posActions, value){
+getQLVals <- function(robot, goal,posActions, value){
   # Get the value for each action
-  sapply(posActions, function(action) stateV(robot$x, robot$y,action, value))
+  sapply(posActions, function(action) stateV(robot$x, robot$y,goal,action, value))
   #stateV(robot$x, robot$y, posActions, value)
 }
 
-getQLActionVals <- function(robot, posActions, value){
+getQLActionVals <- function(robot, goal, posActions, value){
   # Get the value for each action
-  sapply(posActions, function(action) stateV(robot$x, robot$y,action, value))
+  sapply(posActions, function(action) stateV(robot$x, robot$y,goal,action, value))
   #stateV(robot$x, robot$y, posActions, value)
 }
 
-reward <- function(postRobot, goal, eps){
+reward <- function(postRobot, goalPos, eps){
   # If in the goal
-  if (dist(postRobot, goal) < eps)
+  if (dist(postRobot, goalPos) < eps)
     goalReward
   else 
     nonGoalReward

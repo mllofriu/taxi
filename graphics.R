@@ -59,11 +59,11 @@ drawPlaces <- function(places){
 }
 
 # Draw ql value
-drawValue <- function(value) {
+drawValue <- function(value, goal) {
   sData <- data.frame()
   for (i in 0:9){
     for (j in 0:9){
-      m <- min(max (getQLVals(data.frame(x=i,y=j),0:3,value)/.1),1)
+      m <- max(min(max (getQLVals(data.frame(x=i,y=j),goal,0:3,value)/.1),1), 0)
 #       sData <- rbind(sData, data.frame(
 #         xmin = i - world.halfSquareSide, xmax =  i + world.halfSquareSide,
 #         ymin = j - world.halfSquareSide, ymax = j + world.halfSquareSide, fill = m))
@@ -80,14 +80,14 @@ drawValue <- function(value) {
 
 
 # Draw the world and robot
-draw <- function(robot, world, value=NULL){
+draw <- function(robot, goal, world, value=NULL){
   # If there is no base plot, replot the whole thing
   dev.hold()
   plot(NULL,xlim=c(0 - world.halfSquareSide,world.xDim -1 + world.halfSquareSide),
        ylim=c(0 - world.halfSquareSide,world.yDim -1  + world.halfSquareSide),
        xaxt='n', yaxt='n', ylab="", xlab="")
   if (!is.null(value))
-    drawValue(value)
+    drawValue(value, goal)
   drawGrid(world.xDim,world.yDim)
   drawRobot(robot, world)
   drawWalls(world.walls)
