@@ -1,18 +1,18 @@
 halfVisionField <- pi/2
 angleEps <- 1e-10
 
-goalVal <- 1
-explorationVal <- .5
+goalVal <- 50
+explorationVal <- 25
 
 
 
-dist <- function(p1,p2){
-  sqrt((p1$x - p2$x)^2 + (p1$y - p2$y)^2)
-}
+# dist <- function(p1,p2){
+#   sqrt((p1$x - p2$x)^2 + (p1$y - p2$y)^2)
+# }
 
 visible <- function(robot, place, walls, eps){
   # If they are the same point
-  if (dist(robot, place) < eps)
+  if (dist(rbind(robot[c('x','y')], place[c('x','y')])) < eps)
     FALSE
   else {
     # Check line of sight
@@ -36,22 +36,22 @@ taxicVals <- function(robot, posActions, places){
   
   for (p in 1:4){
     place <- places[p,]
-    if (visible(robot, place, world.walls, world.eps)){
+    if (visible(robot, place, world$walls, world$eps)){
   #     print("Taxic")
       # Go to the goal
       # Simulate all actions and minimize distance subject to visibility
-      d <- dist(robot,place)
+      d <- dist(rbind(robot[c('x','y')], place[c('x','y')]))
       for (i in seq(1,length(posActions))) {
   #       newTheta <- (robot$theta + posActions[i]) %% (2 * pi) # Relative actions
         newTheta <- (posActions[i] * pi/2)
         nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
         newRob <- data.frame(x=nPos[1], y=nPos[2], theta=newTheta)
         # IF arrived or closer
-        if (dist(newRob,place) < world.eps || 
-              (visible(newRob, place, world.walls, world.eps) 
-               && dist(newRob,place) < d)){
+        if (dist(rbind(newRob[c('x','y')], place[c('x','y')])) < world$eps || 
+              (visible(newRob, place, world$walls, world$eps) 
+               && dist(rbind(newRob[c('x','y')], place[c('x','y')])) < d)){
           action <- i
-          d <- dist(newRob,place)
+          d <- dist(rbind(newRob[c('x','y')], place[c('x','y')]))
         }
       }
       actionVals[action] <- goalVal

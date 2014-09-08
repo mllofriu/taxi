@@ -8,7 +8,7 @@ actions <- 0:3
 # Get the possible actions, which dont go through walls
 possibleActions <- function(robot, world){
   # Get SpatialLines object for the walls
-  wallssp <- SpatialLines(list(world.walls))
+  wallssp <- SpatialLines(list(world$walls))
   
   # Initialize posible actions
   posActions <- c()

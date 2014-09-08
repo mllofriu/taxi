@@ -4,19 +4,19 @@ require('graphics')
 # Function to draw the robot
 # Robot should have x, y and theta columns
 drawRobot <- function(robot, world){
-  draw.circle(x=robot$x, y=robot$y, world.robotDiam/2)
+  draw.circle(x=robot$x, y=robot$y, world$robotDiam/2)
   
   # Orientation line
 #   orientLine <- data.frame(
 #     x=robot$x, 
 #     y=robot$y,
-#     xend=robot$x+world.robotDiam/2*cos(robot$theta),
-#     yend=robot$y+world.robotDiam/2*sin(robot$theta))
-  lines(x=c(robot$x, robot$x+world.robotDiam/2*cos(robot$theta)), 
-        y=c(robot$y, robot$y+world.robotDiam/2*sin(robot$theta)))
+#     xend=robot$x+world$robotDiam/2*cos(robot$theta),
+#     yend=robot$y+world$robotDiam/2*sin(robot$theta))
+  lines(x=c(robot$x, robot$x+world$robotDiam/2*cos(robot$theta)), 
+        y=c(robot$y, robot$y+world$robotDiam/2*sin(robot$theta)))
 #   
 #   # Return both the line and a circle
-#   list(geom_path(data=circleFun(c(robot$x,robot$y), diameter=world.robotDiam), aes(x=x,y=y), color="gold4"),
+#   list(geom_path(data=circleFun(c(robot$x,robot$y), diameter=world$robotDiam), aes(x=x,y=y), color="gold4"),
 #     geom_segment(data=orientLine, aes(x=x,y=y,xend=xend,yend=yend), color="gold4"))
 # list(geom_point(aes(x=x, y=y), data=robot, size=30, shape=1, color="gold4"),
 #          geom_segment(data=orientLine, aes(x=x,y=y,xend=xend,yend=yend),color="gold4"))
@@ -26,8 +26,8 @@ drawRobot <- function(robot, world){
 # Draw the grid of the world
 drawGrid <- function(xdim, ydim){
   # The values of the line-ends
-  hVals <- seq(-world.halfSquareSide,((xdim-1)+world.halfSquareSide), by=2*world.halfSquareSide)
-  vVals <- seq(-world.halfSquareSide,((ydim-1)+world.halfSquareSide), by=2*world.halfSquareSide)
+  hVals <- seq(-world$halfSquareSide,((xdim-1)+world$halfSquareSide), by=2*world$halfSquareSide)
+  vVals <- seq(-world$halfSquareSide,((ydim-1)+world$halfSquareSide), by=2*world$halfSquareSide)
   # Horizontal and vertical lines
   hLines <- data.frame(t(sapply(hVals, 
                                 function(y) {
@@ -59,17 +59,18 @@ drawPlaces <- function(places){
 }
 
 # Draw ql value
-drawValue <- function(value, goal) {
+drawValue <- function(rlData, goal) {
   sData <- data.frame()
   for (i in 0:9){
     for (j in 0:9){
-      m <- max(min(max (getQLVals(data.frame(x=i,y=j),goal,0:3,value)/.1),1), 0)
+      val <- getStateValue(rlData,data.frame(x=i,y=j),goal)/25
+      val <- max(min(val,1), -1)
 #       sData <- rbind(sData, data.frame(
-#         xmin = i - world.halfSquareSide, xmax =  i + world.halfSquareSide,
-#         ymin = j - world.halfSquareSide, ymax = j + world.halfSquareSide, fill = m))
-      rect(i - world.halfSquareSide,j - world.halfSquareSide,
-           i + world.halfSquareSide, j + world.halfSquareSide,
-           col = rgb(1-m,1-m,1, alpha = .5))
+#         xmin = i - world$halfSquareSide, xmax =  i + world$halfSquareSide,
+#         ymin = j - world$halfSquareSide, ymax = j + world$halfSquareSide, fill = m))
+      rect(i - world$halfSquareSide,j - world$halfSquareSide,
+           i + world$halfSquareSide, j + world$halfSquareSide,
+           col = rgb(.5-val/2,.5-val/2,1, alpha = .5))
     }
   }
 #   print(sData$fill)
@@ -80,18 +81,18 @@ drawValue <- function(value, goal) {
 
 
 # Draw the world and robot
-draw <- function(robot, goal, world, value=NULL){
+draw <- function(robot, goal, world, rlData=NULL){
   # If there is no base plot, replot the whole thing
   dev.hold()
-  plot(NULL,xlim=c(0 - world.halfSquareSide,world.xDim -1 + world.halfSquareSide),
-       ylim=c(0 - world.halfSquareSide,world.yDim -1  + world.halfSquareSide),
+  plot(NULL,xlim=c(0 - world$halfSquareSide,world$xDim -1 + world$halfSquareSide),
+       ylim=c(0 - world$halfSquareSide,world$yDim -1  + world$halfSquareSide),
        xaxt='n', yaxt='n', ylab="", xlab="")
-  if (!is.null(value))
-    drawValue(value, goal)
-  drawGrid(world.xDim,world.yDim)
+  if (!is.null(rlData))
+    drawValue(rlData, goal)
+  drawGrid(world$xDim,world$yDim)
   drawRobot(robot, world)
-  drawWalls(world.walls)
-  drawPlaces(world.places)
+  drawWalls(world$walls)
+  drawPlaces(world$places)
   dev.flush()
 }
 
@@ -109,8 +110,8 @@ par(mar=rep(.2,4))
 #     for (j in y){
 #       m <- getActivation(i,j,3,3,"small")
 #       sData <- rbind(sData, data.frame(
-#         xmin = i - world.halfSquareSide, xmax =  i + world.halfSquareSide,
-#         ymin = j - world.halfSquareSide, ymax = j + world.halfSquareSide, fill = m))
+#         xmin = i - world$halfSquareSide, xmax =  i + world$halfSquareSide,
+#         ymin = j - world$halfSquareSide, ymax = j + world$halfSquareSide, fill = m))
 #     }
 #   }
 #   #   print(sData$fill)
@@ -118,4 +119,4 @@ par(mar=rep(.2,4))
 #        , scale_fill_gradient(limits=c(0,1),low='white', high='red'))
 # }
 
-system.time(draw( robot, world, value))
+# system.time(draw( robot, world, value))
