@@ -24,8 +24,8 @@ visible <- function(robot, place, walls, eps){
     angleOrientDiff <-  atan2(sin(angleToGoal-robot$theta),cos(robot$theta-angleToGoal))
 #     print (angleOrientDiff)
 #     print((abs(angleOrientDiff) <= halfVisionField))
-#     (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)) && dist(rbind(robot[c('x','y')], place[c('x','y')])) <= 4)
-    (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)))
+    (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)) && dist(rbind(robot[c('x','y')], place[c('x','y')])) <= 4)
+#     (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)))
   }
  
 }

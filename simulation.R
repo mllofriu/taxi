@@ -7,15 +7,15 @@ library('plyr')
 source('graphics.R')
 source('movement.R')
 source('taxic.R')
-#  source('ql.R')
+source('ql.R')
 # source('msql.R')
 source('msac.R')
 source('exploration.R')
 
-showPlots <- TRUE
+showPlots <- T
 
-numTrials <- 1
-numEpisodes <- 10
+numTrials <- 10
+numEpisodes <- 20
 
 explorationVal <- 5
 forwardExplorationProb <- .3
@@ -34,21 +34,19 @@ if (!showPlots){
 }
 
 
-# rte <- foreach (method=c('multiscale','normal'), .combine=rbind) %do% {
+rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
 # for (method in c('multiscale')){
-#   if (method == 'normal')
-#     source('ql.R')
-#   else
-#     source('msql.R')
-  
-
-#   foreach (trial=1:numTrials, .packages=c('sp','rgeos', 'ggplot2'), .combine=rbind, .export=c('%do%', 'foreach')) %do%{
-  for (trial in 1:numTrials)  {
+  foreach (trial=1:numTrials, .packages=c('sp','rgeos', 'ggplot2'), .combine=rbind, .export=c('%do%', 'foreach')) %do%{
+#   for (trial in 1:numTrials)  {
     # Init ql value
-    rlData <- initRLData(world$xDim, world$yDim, 4, 4, world)
-#     print(value)
-#     foreach (episode=1:numEpisodes, .combine=rbind) %do% {
-    for(episode in 1:numEpisodes){
+    if (method == 'msac')
+      rlData <- msac(world$xDim, world$yDim, 4, 4, world)
+    else if (method == 'ql')
+      rlData <- ql(world$xDim, world$yDim, 4, 4)
+
+    print (class(rlData))
+    foreach (episode=1:numEpisodes, .combine=rbind) %do% {
+#     for(episode in 1:numEpisodes){
         
       steps <- 0
       # Choose goal random
@@ -64,7 +62,7 @@ if (!showPlots){
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=9,y=0,theta=pi/2))){
-            if(steps %% 100 == 0)
+            if(steps %% 1 == 0)
               draw(robot, goal, world, rlData)
 #           }
         }
@@ -111,7 +109,7 @@ if (!showPlots){
     }
   }
 
-# }
+}
 
 
 # qlRTSum <- ddply(qlRT, .(episode), summarise, meanSteps = mean(steps))

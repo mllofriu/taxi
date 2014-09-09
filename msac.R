@@ -8,7 +8,7 @@ gamma <- 1
 goalReward <- 100
 nonGoalReward <- -5
 
-initRLData <- function(dimx, dimy, numGoals, numActions, world){
+msac <- function(dimx, dimy, numGoals, numActions, world){
   value <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), goal=1:(numGoals), type=factor(x=c("small", "large")))
   value$value <- 0
   
