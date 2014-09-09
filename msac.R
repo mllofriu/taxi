@@ -1,12 +1,12 @@
 library('sp')
 library('rgeos')
 
-activNorm <- 10
+activNorm <- 5
 
-alpha <- .8
+alpha <- .95
 gamma <- 1
 goalReward <- 100
-nonGoalReward <- 0
+nonGoalReward <- -5
 
 initRLData <- function(dimx, dimy, numGoals, numActions, world){
   value <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), goal=1:(numGoals), type=factor(x=c("small", "large")))
@@ -59,7 +59,8 @@ actionValues <- function(actionVals, currX, currY,goal, action){
     apply(actionVals[abs(actionVals$x-currX) <= 2 &
                        abs(actionVals$y - currY) <= 2 &
                        actionVals$action==action &
-                       actionVals$goal == goal,],1, 
+                       actionVals$goal == goal &
+                       actionVals$type == "small",],1, 
           function(s){
             x <- as.numeric(s[1])
             y <- as.numeric(s[2])
@@ -67,7 +68,7 @@ actionValues <- function(actionVals, currX, currY,goal, action){
             stateVal <- as.numeric(s[6])
             
             # Normalize when calculating total value
-            activation <- getActivation(currX, currY, x, y, type) / activNorm
+            activation <- getActivation(currX, currY, x, y, type)
             
             stateVal * activation
           })
@@ -100,8 +101,9 @@ update <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore
   preVal <- getStateValue(rlData, preRobot, goal)
   postVal <- getStateValue(rlData, postRobot, goal)
   
-  error <- postVal + reward - preVal 
-  
+  error <- gamma*(postVal + taxicAfter) + reward - (preVal + taxicBefore)
+#   error <- gamma*(postVal ) + reward - (preVal) 
+
   # update value
   rlData$stateValues[rlData$stateValues$goal == goal,'value'] <- apply(
     rlData$stateValues[rlData$stateValues$goal == goal,],1,
@@ -120,8 +122,8 @@ update <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore
   
   # update action values
   rlData$actionVals[rlData$actionVals$goal == goal & 
-                        rlData$actionVals$action == action,'value'] <- apply(
-    rlData$actionVals[rlData$actionVals$goal == goal & rlData$actionVals$action == action,],1,
+                        rlData$actionVals$action == action & rlData$actionVals$type == "small",'value'] <- apply(
+    rlData$actionVals[rlData$actionVals$goal == goal & rlData$actionVals$action == action & rlData$actionVals$type == "small",],1,
     function (state){
       x <- as.numeric(state[1])
       y <- as.numeric(state[2])
@@ -155,9 +157,9 @@ getActivation <- function(currX, currY, x, y, type){
     if (currX == x && currY == y){
       activation <- 1
     } else if (dist(rbind(c(x,y), c(currX, currY))) <= 1){ 
-      activation <- .8
+      activation <- .5
     }  else if (dist(rbind(c(x,y), c(currX, currY))) <= sqrt(2)){ 
-      activation <- .7
+      activation <- .25
     } else {
       activation <- 0
     }

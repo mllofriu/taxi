@@ -1,9 +1,7 @@
 halfVisionField <- pi/2
 angleEps <- 1e-10
 
-goalVal <- 50
-explorationVal <- 25
-
+goalVal <- 10
 
 
 # dist <- function(p1,p2){
@@ -23,21 +21,25 @@ visible <- function(robot, place, walls, eps){
     angleToGoal <- atan2(place$y - robot$y, place$x - robot$x)
 #     print(angleToGoal)
 #     print(robot$theta)
-    angleOrientDiff <- atan2(sin(angleToGoal-robot$theta),cos(robot$theta-angleToGoal))
+    angleOrientDiff <-  atan2(sin(angleToGoal-robot$theta),cos(robot$theta-angleToGoal))
 #     print (angleOrientDiff)
 #     print((abs(angleOrientDiff) <= halfVisionField))
+#     (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)) && dist(rbind(robot[c('x','y')], place[c('x','y')])) <= 4)
     (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)))
   }
  
 }
 
-taxicVals <- function(robot, posActions, places){
+taxicVals <- function(robot, posActions, places, eps){
+  
+  
   actionVals <- rep(0, length(posActions))
   
   for (p in 1:4){
     place <- places[p,]
+#     print(place)
     if (visible(robot, place, world$walls, world$eps)){
-  #     print("Taxic")
+#       print("Taxic")
       # Go to the goal
       # Simulate all actions and minimize distance subject to visibility
       d <- dist(rbind(robot[c('x','y')], place[c('x','y')]))
@@ -52,15 +54,18 @@ taxicVals <- function(robot, posActions, places){
                && dist(rbind(newRob[c('x','y')], place[c('x','y')])) < d)){
           action <- i
           d <- dist(rbind(newRob[c('x','y')], place[c('x','y')]))
+          
         }
       }
+    
+      
+#       if (d < world$eps)
+#         actionVals[action] <- 2*goalVal
+#       else
       actionVals[action] <- goalVal
+#   / max(d,1)
     } 
   }
-
-  randomAction <- sample(1:length(posActions),1)
-  actionVals[randomAction] <- actionVals[randomAction] + explorationVal
-
 
   actionVals
 }

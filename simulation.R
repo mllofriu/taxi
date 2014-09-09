@@ -10,11 +10,15 @@ source('taxic.R')
 #  source('ql.R')
 # source('msql.R')
 source('msac.R')
+source('exploration.R')
 
 showPlots <- TRUE
 
 numTrials <- 1
 numEpisodes <- 10
+
+explorationVal <- 5
+forwardExplorationProb <- .3
 
 world <- initWorld()
 
@@ -50,7 +54,7 @@ if (!showPlots){
       # Choose goal random
       goal <- sample(1:4, 1)
 #       goal <- 3
-      goal <- 4
+#       goal <- 4
       goalLocation <- world$places[goal,c('x','y')]
       robot <- data.frame(x=9,y=0,theta=pi)
       # While the robot has not reach the goal
@@ -60,8 +64,8 @@ if (!showPlots){
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=9,y=0,theta=pi/2))){
-            if(steps %% 1 == 0)
-              print(system.time(draw(robot, goal, world, rlData)))
+            if(steps %% 100 == 0)
+              draw(robot, goal, world, rlData)
 #           }
         }
         #       
@@ -69,13 +73,16 @@ if (!showPlots){
         # Get affordances
         posActions <- possibleActions(robot, world)
         # Get taxic values
-        tVals <- taxicVals(robot,posActions, world$places)
+        tVals <- taxicVals(robot,posActions, world$places, world$eps)
+        print(tVals)
         # Get QL values
         # Only get action values from the small ones
         qlVals <- getActionVals(rlData,robot, goal, posActions)
+        print(qlVals)
+        # Exploration vals
+        expVals <- getExplorationVals(posActions)
         # Get total values as the sum
-        actionVals <- tVals + qlVals
-        print(actionVals)
+        actionVals <- tVals + qlVals + expVals
         #       actionVals <- qlVals
         # Select maximum value action
         action <- posActions[match(max(actionVals), actionVals)]
@@ -85,9 +92,10 @@ if (!showPlots){
 #         print(goal)
         r <- reward(rlData, postRobot, world$places[goal,c('x','y')], world$eps)
         # Update Ql Value
-        tValBefore <- tVals[match(max(actionVals), actionVals)]
+#         tValBefore <- tVals[match(max(actionVals), actionVals)]
+        tValBefore <- max(tVals)
         postPosActions <- possibleActions(postRobot, world)
-        tValAfter <- max(taxicVals(postRobot,postPosActions, world$places))
+        tValAfter <- max(taxicVals(postRobot,postPosActions, world$places, world$eps))
 #         qlValsAfter <- getQLActionVals(postRobot, goal, postPosActions, value)
 #         cat('tvals ', tValBefore, tValAfter, '\n')
 #         print(sum(0+qlValsAfter))
