@@ -7,15 +7,17 @@ library('plyr')
 source('graphics.R')
 source('movement.R')
 source('taxic.R')
+source('genericql.R')
 source('ql.R')
 # source('msql.R')
 source('msac.R')
 source('exploration.R')
+source('world.R')
 
-showPlots <- T
+showPlots <- FALSE
 
-numTrials <- 10
-numEpisodes <- 20
+numTrials <- 2
+numEpisodes <- 2
 
 explorationVal <- 5
 forwardExplorationProb <- .3
@@ -35,8 +37,8 @@ if (!showPlots){
 
 
 rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
-# for (method in c('multiscale')){
-  foreach (trial=1:numTrials, .packages=c('sp','rgeos', 'ggplot2'), .combine=rbind, .export=c('%do%', 'foreach')) %do%{
+# for (method in c('ql','msac')){
+  foreach (trial=1:numTrials, .packages=c('sp','rgeos', 'ggplot2'), .combine=rbind, .export=c('%do%', 'foreach')) %dopar%{
 #   for (trial in 1:numTrials)  {
     # Init ql value
     if (method == 'msac')
@@ -44,10 +46,12 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
     else if (method == 'ql')
       rlData <- ql(world$xDim, world$yDim, 4, 4)
 
-    print (class(rlData))
     foreach (episode=1:numEpisodes, .combine=rbind) %do% {
 #     for(episode in 1:numEpisodes){
-        
+      source('genericql.R')
+      source('ql.R')
+      # source('msql.R')
+      source('msac.R')
       steps <- 0
       # Choose goal random
       goal <- sample(1:4, 1)
@@ -62,7 +66,7 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=9,y=0,theta=pi/2))){
-            if(steps %% 1 == 0)
+            if(steps %% 100 == 0)
               draw(robot, goal, world, rlData)
 #           }
         }
@@ -71,12 +75,13 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
         # Get affordances
         posActions <- possibleActions(robot, world)
         # Get taxic values
-        tVals <- taxicVals(robot,posActions, world$places, world$eps)
-        print(tVals)
+        if (method != 'ql')
+          tVals <- taxicVals(robot,posActions, world$places, world$eps)
+        else 
+          tVals <- 0
         # Get QL values
         # Only get action values from the small ones
         qlVals <- getActionVals(rlData,robot, goal, posActions)
-        print(qlVals)
         # Exploration vals
         expVals <- getExplorationVals(posActions)
         # Get total values as the sum
@@ -105,7 +110,7 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
 #               Sys.sleep(1)
       }
       
-      data.frame(trial=trial, episode=episode, steps=steps, method=getMethod())  
+      data.frame(trial=trial, episode=episode, steps=steps, method=getMethod(rlData))  
     }
   }
 
@@ -121,10 +126,10 @@ rte.aov <- aov(steps ~ factor(episode):method, data=rte)
 tuk <- TukeyHSD(rte.aov)
 save (rte, file="rte.Rdata")
 names(rteSum)[names(rteSum) == "method"] <- "Method"
-pdf('resultPrelim090314.pdf')
+pdf('rte.pdf')
 qplot(episode, meanSteps, data=rteSum, geom=c('point', 'line'), color=Method) +
   ylab("Num. of Steps") + xlab("Episode") + 
   theme(legend.text = element_text(size=16), legend.title = element_text(size=16))
 dev.off()
-
+r
 

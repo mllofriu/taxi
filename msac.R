@@ -46,21 +46,22 @@ msac <- function(dimx, dimy, numGoals, numActions, world){
   rlData
 }
 
-getActionVals <- function(rlData, robot, goal, posActions){
+getActionVals.msac <- function(rlData, robot, goal, posActions){
   # Get the value for each action
-  sapply(posActions, function(action) actionValues(rlData$actionVals, robot$x, robot$y,goal,action))
+  sapply(posActions, function(action) actionValues.msac(rlData, robot$x, robot$y,goal,action))
 }
 
-actionValues <- function(actionVals, currX, currY,goal, action){
+actionValues.msac <- function(rlData, currX, currY,goal, action){
+  av <- rlData$actionVals
   currX <- round(currX)
   currY <- round(currY)
   sum(
     # Only apply to nearby cells
-    apply(actionVals[abs(actionVals$x-currX) <= 2 &
-                       abs(actionVals$y - currY) <= 2 &
-                       actionVals$action==action &
-                       actionVals$goal == goal &
-                       actionVals$type == "small",],1, 
+    apply(av[abs(av$x-currX) <= 2 &
+             abs(av$y - currY) <= 2 &
+             av$action==action &
+             av$goal == goal &
+             av$type == "small",],1, 
           function(s){
             x <- as.numeric(s[1])
             y <- as.numeric(s[2])
@@ -75,7 +76,7 @@ actionValues <- function(actionVals, currX, currY,goal, action){
   )
 }
 
-getStateValue <- function(rlData, robot, goal){
+getStateValue.msac <- function(rlData, robot, goal){
   currX <- round(robot$x)
   currY <- round(robot$y)
   sum(
@@ -97,9 +98,9 @@ getStateValue <- function(rlData, robot, goal){
   )
 }
 
-update <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore, taxicAfter){
+update.msac <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore, taxicAfter){
   preVal <- getStateValue(rlData, preRobot, goal)
-  postVal <- getStateValue(rlData, postRobot, goal)
+  postVal <- getStateValue(rlData, posRobot, goal)
   
   error <- gamma*(postVal + taxicAfter) + reward - (preVal + taxicBefore)
 #   error <- gamma*(postVal ) + reward - (preVal) 
@@ -163,11 +164,11 @@ getActivation <- function(currX, currY, x, y, type){
     } else {
       activation <- 0
     }
-  } 
+  }
   activation
 }
 
-reward <- function(rlData, postRobot, goalPos, eps){
+reward.msac <- function(rlData, postRobot, goalPos, eps){
   # If in the goal
   if (dist(rbind(postRobot[c('x','y')], goalPos[c('x','y')])) < eps)
     goalReward
@@ -175,6 +176,6 @@ reward <- function(rlData, postRobot, goalPos, eps){
     nonGoalReward
 }
 
-getMethod <- function(){
+getMethod.msac <- function(rlData){
   "Multi-Scale AC"
 }

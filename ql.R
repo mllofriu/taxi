@@ -1,42 +1,51 @@
 
 alpha <- .8
-gamma <- .95
-goalReward <- 2
-nonGoalReward <- 0
+gamma <- 1
+goalReward <- 100
+nonGoalReward <- -5
 
-initValue <- function(dimx, dimy, numActions, world){
-  array(0, dim=c(dimx, dimy, numActions))
+ql <- function(dimx, dimy, numGoals, numActions){
+  rlData$q <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), goal=1:(numGoals), action=0:(numActions-1))
+  rlData$q$value <- 0
+  class(rlData) <- "ql"
+  rlData
 }
 
-stateV <- function(x, y, action, value) {
+stateV.ql <- function(rlData, x, y, goal, action) {
   # Round x, y and the action (the action in pi/2 intervals)
-  value[round(x) + 1, round(y) + 1, action + 1]
+  q <- rlData$q
+  q[q$x==round(x) & q$y==round(y) & q$goal==goal & q$action==action, 'value']
 }
 
-getQLVals <- function(robot, posActions, value){
+getActionVals.ql <- function(rlData, robot, goal, posActions){
   # Get the value for each action
-  stateV(robot$x, robot$y, posActions, value)
+  sapply(posActions, function(action) stateV.ql(rlData, robot$x, robot$y, goal, action))
 }
 
-getQLActionVals <- getQLVals
+getStateValue.ql <- function(rlData, robot, goal){
+  max(getActionVals(rlData, robot, goal, 0:3))
+}
 
-update <- function(preRobot, posRobot, action, value, reward){
-  val <- stateV(preRobot$x, preRobot$y, action, value)
-  value[round(preRobot$x) + 1, round(preRobot$y) + 1, action + 1] <-
+
+update.ql <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore, taxicAfter){
+  val <- stateV.ql(rlData, preRobot$x, preRobot$y, goal, action)
+  maxValPost <- max(stateV.ql(rlData, posRobot$x, posRobot$y, goal, action))
+  q <- rlData$q
+  q[q$x==round(preRobot$x) & q$y==round(preRobot$y) & q$goal==goal & q$action==action, 'value'] <-
     val +
-    alpha * (reward + gamma * max(value[round(posRobot$x) + 1, round(posRobot$y) + 1, 1:4]) - val)
+    alpha * (reward + gamma * maxValPost - val)
   
-  value
+  rlData
 }
 
-reward <- function(postRobot, goal, eps){
+reward.ql <- function(rlData, postRobot, goalPos, eps){
   # If in the goal
-  if (dist(postRobot, goal) < eps)
+  if (dist(rbind(postRobot[c('x','y')], goalPos[c('x','y')])) < eps)
     goalReward
   else 
     nonGoalReward
 }
 
-getMethod <- function(){
+getMethod.ql <- function(rlData){
   "Normal QL"
 }
