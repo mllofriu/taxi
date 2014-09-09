@@ -1,13 +1,6 @@
 library('sp')
 library('rgeos')
 
-activNorm <- 5
-
-alpha <- .95
-gamma <- 1
-goalReward <- 100
-nonGoalReward <- -5
-
 msac <- function(dimx, dimy, numGoals, numActions, world){
   value <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), goal=1:(numGoals), type=factor(x=c("small", "large")))
   value$value <- 0
@@ -41,6 +34,13 @@ msac <- function(dimx, dimy, numGoals, numActions, world){
   
   rlData <- list(stateValues=value[!largeAndHitsWalls,],
                  actionVals=actionVals[!largeAndHitsWalls,])
+  
+  rlData$alpha <- .95
+  rlData$gamma <- 1
+  rlData$goalReward <- 100
+  rlData$nonGoalReward <- -5
+  rlData$activNorm <- 5
+  
   class(rlData) <- "msac"
   
   rlData
@@ -91,7 +91,7 @@ getStateValue.msac <- function(rlData, robot, goal){
             stateVal <- as.numeric(s[5])
             
             # Normalize when calculating total value
-            activation <- getActivation(currX, currY, x, y, type) / activNorm
+            activation <- getActivation(currX, currY, x, y, type) / rlData$activNorm
             
             stateVal * activation
           })
@@ -102,7 +102,7 @@ update.msac <- function(rlData, preRobot, posRobot, goal, action, reward, taxicB
   preVal <- getStateValue(rlData, preRobot, goal)
   postVal <- getStateValue(rlData, posRobot, goal)
   
-  error <- gamma*(postVal + taxicAfter) + reward - (preVal + taxicBefore)
+  error <- rlData$gamma*(postVal + taxicAfter) + reward - (preVal + taxicBefore)
 #   error <- gamma*(postVal ) + reward - (preVal) 
 
   # update value
@@ -117,7 +117,7 @@ update.msac <- function(rlData, preRobot, posRobot, goal, action, reward, taxicB
       # Unnormalized version of activation
       activation <- getActivation(preRobot$x, preRobot$y, x, y, type)
       
-      activation * (val + alpha * error) + (1-activation) * val 
+      activation * (val + rlData$alpha * error) + (1-activation) * val 
     }
   )
   
@@ -134,7 +134,7 @@ update.msac <- function(rlData, preRobot, posRobot, goal, action, reward, taxicB
       # Unnormalized version of activation
       activation <- getActivation(preRobot$x, preRobot$y, x, y, type)
       
-      activation * (val + alpha * error) + (1-activation) * val 
+      activation * (val + rlData$alpha * error) + (1-activation) * val 
     }
   )
   
@@ -171,9 +171,9 @@ getActivation <- function(currX, currY, x, y, type){
 reward.msac <- function(rlData, postRobot, goalPos, eps){
   # If in the goal
   if (dist(rbind(postRobot[c('x','y')], goalPos[c('x','y')])) < eps)
-    goalReward
+    rlData$goalReward
   else 
-    nonGoalReward
+    rlData$nonGoalReward
 }
 
 getMethod.msac <- function(rlData){

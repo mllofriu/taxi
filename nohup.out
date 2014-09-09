@@ -5,14 +5,8 @@ rgeos version: 0.3-6, (SVN revision 450)
 Loading required package: foreach
 Loading required package: iterators
 Loading required package: parallel
-Loading required package: ggplot2
-Loading required package: methods
-Warning message:
-In quartz("Maze", 5, 5, antialias = T) :
-  Quartz device is not available on this platform
-Error in .External2(C_X11, paste("png::", filename, sep = ""), g$width,  : 
-  unable to start device PNG
-Calls: png
-In addition: Warning message:
-In png("rts.png") : no png support in this version of R
-Execution halted
+Loading required package: plotrix
+automatically exporting the following variables from the local environment:
+  actions, angleEps, draw, drawGrid, drawPlaces, drawRobot, drawValue, drawWalls, explorationVal, getActionVals, getExplorationVals, getMethod, getStateValue, goalVal, halfVisionField, method, move, msac, numEpisodes, possibleActions, ql, reward, showPlots, stepSize, taxicVals, update, visible, world 
+explicitly exporting variables(s): actionValues.msac, getActionVals.msac, getActionVals.ql, getActivation, getMethod.msac, getMethod.ql, getStateValue.msac, getStateValue.ql, initWorld, reward.msac, reward.ql, stateV.ql, update.msac, update.ql
+numValues: 100, numResults: 0, stopped: TRUE

@@ -16,8 +16,8 @@ source('world.R')
 
 showPlots <- FALSE
 
-numTrials <- 2
-numEpisodes <- 2
+numTrials <- 10
+numEpisodes <- 40
 
 explorationVal <- 5
 forwardExplorationProb <- .3
@@ -37,8 +37,8 @@ if (!showPlots){
 
 
 rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
-# for (method in c('ql','msac')){
-  foreach (trial=1:numTrials, .packages=c('sp','rgeos', 'ggplot2'), .combine=rbind, .export=c('%do%', 'foreach')) %dopar%{
+# for (method in c('msac','ql')){
+  foreach (trial=1:numTrials,.verbose=T, .packages=c('foreach','sp','rgeos','plotrix','plyr', 'ggplot2'), .combine=rbind, .export=c(as.vector(lsf.str()))) %dopar%{
 #   for (trial in 1:numTrials)  {
     # Init ql value
     if (method == 'msac')
@@ -48,17 +48,13 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
 
     foreach (episode=1:numEpisodes, .combine=rbind) %do% {
 #     for(episode in 1:numEpisodes){
-      source('genericql.R')
-      source('ql.R')
-      # source('msql.R')
-      source('msac.R')
       steps <- 0
       # Choose goal random
       goal <- sample(1:4, 1)
 #       goal <- 3
 #       goal <- 4
       goalLocation <- world$places[goal,c('x','y')]
-      robot <- data.frame(x=9,y=0,theta=pi)
+      robot <- data.frame(x=4,y=4,theta=-pi/2)
       # While the robot has not reach the goal
       while (!(dist(rbind(robot[c('x','y')],goalLocation[c('x','y')]))< world$eps)){
         # Draw the world
@@ -131,5 +127,4 @@ qplot(episode, meanSteps, data=rteSum, geom=c('point', 'line'), color=Method) +
   ylab("Num. of Steps") + xlab("Episode") + 
   theme(legend.text = element_text(size=16), legend.title = element_text(size=16))
 dev.off()
-r
 

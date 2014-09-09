@@ -1,12 +1,19 @@
 
-alpha <- .8
-gamma <- 1
-goalReward <- 100
-nonGoalReward <- -5
+
+
+
+
 
 ql <- function(dimx, dimy, numGoals, numActions){
+  rlData <- list()
   rlData$q <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), goal=1:(numGoals), action=0:(numActions-1))
   rlData$q$value <- 0
+  
+  rlData$alpha <- .8
+  rlData$gamma <- 1
+  rlData$goalReward <- 100
+  rlData$nonGoalReward <- -.1
+    
   class(rlData) <- "ql"
   rlData
 }
@@ -27,23 +34,24 @@ getStateValue.ql <- function(rlData, robot, goal){
 }
 
 
-update.ql <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore, taxicAfter){
+update.ql <- function(rlData, preRobot, posRobot, goal, action, r, taxicBefore, taxicAfter){
   val <- stateV.ql(rlData, preRobot$x, preRobot$y, goal, action)
-  maxValPost <- max(stateV.ql(rlData, posRobot$x, posRobot$y, goal, action))
+  maxValPost <- max(getActionVals(rlData, posRobot, goal, 0:3))
   q <- rlData$q
   q[q$x==round(preRobot$x) & q$y==round(preRobot$y) & q$goal==goal & q$action==action, 'value'] <-
     val +
-    alpha * (reward + gamma * maxValPost - val)
+    rlData$alpha * (r + rlData$gamma * maxValPost - val)
   
+  rlData$q <- q
   rlData
 }
 
 reward.ql <- function(rlData, postRobot, goalPos, eps){
   # If in the goal
   if (dist(rbind(postRobot[c('x','y')], goalPos[c('x','y')])) < eps)
-    goalReward
+    rlData$goalReward
   else 
-    nonGoalReward
+    rlData$nonGoalReward
 }
 
 getMethod.ql <- function(rlData){
