@@ -38,7 +38,7 @@ msac <- function(dimx, dimy, numGoals, numActions, world){
   rlData$alpha <- .95
   rlData$gamma <- 1
   rlData$goalReward <- 100
-  rlData$nonGoalReward <- -5
+  rlData$nonGoalReward <- 0
   rlData$activNorm <- 5
   
   class(rlData) <- "msac"

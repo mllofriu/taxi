@@ -30,42 +30,36 @@ visible <- function(robot, place, walls, eps){
  
 }
 
-taxicVals <- function(robot, posActions, places, eps){
-  
+taxicVals <- function(robot,goalLocation,  posActions, eps){
   
   actionVals <- rep(0, length(posActions))
-  
-  for (p in 1:4){
-    place <- places[p,]
-#     print(place)
-    if (visible(robot, place, world$walls, world$eps)){
-#       print("Taxic")
-      # Go to the goal
-      # Simulate all actions and minimize distance subject to visibility
-      d <- dist(rbind(robot[c('x','y')], place[c('x','y')]))
-      for (i in seq(1,length(posActions))) {
-  #       newTheta <- (robot$theta + posActions[i]) %% (2 * pi) # Relative actions
-        newTheta <- (posActions[i] * pi/2)
-        nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
-        newRob <- data.frame(x=nPos[1], y=nPos[2], theta=newTheta)
-        # IF arrived or closer
-        if (dist(rbind(newRob[c('x','y')], place[c('x','y')])) < world$eps || 
-              (visible(newRob, place, world$walls, world$eps) 
-               && dist(rbind(newRob[c('x','y')], place[c('x','y')])) < d)){
-          action <- i
-          d <- dist(rbind(newRob[c('x','y')], place[c('x','y')]))
-          
-        }
+
+  if (visible(robot, goalLocation, world$walls, world$eps)){
+    # Go to the goal
+    # Simulate all actions and minimize distance subject to visibility
+    d <- dist(rbind(robot[c('x','y')], goalLocation[c('x','y')]))
+    for (i in seq(1,length(posActions))) {
+#       newTheta <- (robot$theta + posActions[i]) %% (2 * pi) # Relative actions
+      newTheta <- (posActions[i] * pi/2)
+      nPos <- c(robot$x + stepSize * cos(newTheta), robot$y + stepSize * sin(newTheta))
+      newRob <- data.frame(x=nPos[1], y=nPos[2], theta=newTheta)
+      # IF arrived or closer
+      if (dist(rbind(newRob[c('x','y')], goalLocation[c('x','y')])) < world$eps || 
+            (visible(newRob, goalLocation, world$walls, world$eps) 
+             && dist(rbind(newRob[c('x','y')], goalLocation[c('x','y')])) < d)){
+        action <- i
+        d <- dist(rbind(newRob[c('x','y')], goalLocation[c('x','y')]))
       }
+    }
+  
     
-      
 #       if (d < world$eps)
 #         actionVals[action] <- 2*goalVal
 #       else
-      actionVals[action] <- goalVal
+    actionVals[action] <- goalVal
 #   / max(d,1)
-    } 
-  }
+  } 
+  
 
   actionVals
 }

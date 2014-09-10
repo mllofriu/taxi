@@ -16,8 +16,8 @@ source('world.R')
 
 showPlots <- FALSE
 
-numTrials <- 10
-numEpisodes <- 40
+numTrials <- 100
+numEpisodes <- 50
 
 explorationVal <- 5
 forwardExplorationProb <- .3
@@ -51,8 +51,10 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
       steps <- 0
       # Choose goal random
       goal <- sample(1:4, 1)
-#       goal <- 3
+      #       goal <- 3
 #       goal <- 4
+      cat ("Going to goal", as.character(world$places[goal,'label']), "\n")
+
       goalLocation <- world$places[goal,c('x','y')]
       robot <- data.frame(x=4,y=4,theta=-pi/2)
       # While the robot has not reach the goal
@@ -62,7 +64,7 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=9,y=0,theta=pi/2))){
-            if(steps %% 100 == 0)
+            if(steps %% 1 == 0)
               draw(robot, goal, world, rlData)
 #           }
         }
@@ -71,10 +73,8 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
         # Get affordances
         posActions <- possibleActions(robot, world)
         # Get taxic values
-        if (method != 'ql')
-          tVals <- taxicVals(robot,posActions, world$places, world$eps)
-        else 
-          tVals <- 0
+        tVals <- taxicVals(robot, goalLocation, posActions,world$eps)
+
         # Get QL values
         # Only get action values from the small ones
         qlVals <- getActionVals(rlData,robot, goal, posActions)
@@ -92,13 +92,10 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
         r <- reward(rlData, postRobot, world$places[goal,c('x','y')], world$eps)
         # Update Ql Value
 #         tValBefore <- tVals[match(max(actionVals), actionVals)]
-        tValBefore <- max(tVals)
-        postPosActions <- possibleActions(postRobot, world)
-        tValAfter <- max(taxicVals(postRobot,postPosActions, world$places, world$eps))
 #         qlValsAfter <- getQLActionVals(postRobot, goal, postPosActions, value)
 #         cat('tvals ', tValBefore, tValAfter, '\n')
 #         print(sum(0+qlValsAfter))
-        rlData <- update(rlData, robot, postRobot, goal, action, r, tValBefore,tValAfter)
+        rlData <- update(rlData, robot, postRobot, goal, action, r, 0,0)
         # Update robot
         robot <- postRobot
         # Increase step count
