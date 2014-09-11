@@ -35,11 +35,11 @@ msac <- function(dimx, dimy, numGoals, numActions, world){
   rlData <- list(stateValues=value[!largeAndHitsWalls,],
                  actionVals=actionVals[!largeAndHitsWalls,])
   
-  rlData$alpha <- .95
+  rlData$alpha <- .8
   rlData$gamma <- 1
   rlData$goalReward <- 100
   rlData$nonGoalReward <- 0
-  rlData$activNorm <- 5
+  rlData$activNorm <- 10
   
   class(rlData) <- "msac"
   
@@ -123,8 +123,8 @@ update.msac <- function(rlData, preRobot, posRobot, goal, action, reward, taxicB
   
   # update action values
   rlData$actionVals[rlData$actionVals$goal == goal & 
-                        rlData$actionVals$action == action & rlData$actionVals$type == "small",'value'] <- apply(
-    rlData$actionVals[rlData$actionVals$goal == goal & rlData$actionVals$action == action & rlData$actionVals$type == "small",],1,
+                        rlData$actionVals$action == action,'value'] <- apply(
+    rlData$actionVals[rlData$actionVals$goal == goal & rlData$actionVals$action == action,],1,
     function (state){
       x <- as.numeric(state[1])
       y <- as.numeric(state[2])
@@ -158,9 +158,9 @@ getActivation <- function(currX, currY, x, y, type){
     if (currX == x && currY == y){
       activation <- 1
     } else if (dist(rbind(c(x,y), c(currX, currY))) <= 1){ 
-      activation <- .5
+      activation <- .8
     }  else if (dist(rbind(c(x,y), c(currX, currY))) <= sqrt(2)){ 
-      activation <- .25
+      activation <- .7
     } else {
       activation <- 0
     }

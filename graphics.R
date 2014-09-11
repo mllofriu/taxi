@@ -54,15 +54,15 @@ drawWalls <- function(walls){
 
 # Draw the interest places
 drawPlaces <- function(places){
-  text(places$x, places$y, places$label, cex=2)
+  text(places$x, places$y, places$label, cex=.5)
 #   geom_text(data=places, aes(x=x,y=y,label=label), size = 10)
 }
 
 # Draw ql value
 drawValue <- function(rlData, goal) {
   sData <- data.frame()
-  for (i in 0:9){
-    for (j in 0:9){
+  for (i in 0:19){
+    for (j in 0:19){
       val <- getStateValue(rlData,data.frame(x=i,y=j),goal)/5
       val <- max(min(val,1), -1)
 #       sData <- rbind(sData, data.frame(

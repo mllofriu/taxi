@@ -51,12 +51,12 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
       steps <- 0
       # Choose goal random
       goal <- sample(1:4, 1)
-      #       goal <- 3
+            goal <- 3
 #       goal <- 4
       cat ("Going to goal", as.character(world$places[goal,'label']), "\n")
 
       goalLocation <- world$places[goal,c('x','y')]
-      robot <- data.frame(x=4,y=4,theta=-pi/2)
+      robot <- data.frame(x=8,y=8,theta=-pi/2)
       # While the robot has not reach the goal
       while (!(dist(rbind(robot[c('x','y')],goalLocation[c('x','y')]))< world$eps)){
         # Draw the world
@@ -64,7 +64,7 @@ rte <- foreach (method=c('ql','msac'), .combine=rbind) %do% {
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=9,y=0,theta=pi/2))){
-            if(steps %% 1 == 0)
+            if(steps %% 50 == 0)
               draw(robot, goal, world, rlData)
 #           }
         }
