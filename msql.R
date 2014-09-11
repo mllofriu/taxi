@@ -1,16 +1,14 @@
 
-alpha <- .8
-gamma <- 1
-goalReward <- 100
-nonGoalReward <- 0
 
 
-initValue <- function(dimx, dimy, numGoals, numActions){
+
+msql <- function(dimx, dimy, numGoals, numActions, world){
+  rlData <- list()
   value <- expand.grid(x=0:(dimx-1), y=0:(dimy-1), goal=1:(numGoals), type=factor(x=c("small", "large")), action=0:3)
   value$value <- 0
   
   # Get SpatialLines object for the walls
-  wallssp <- SpatialLines(list(world.walls))
+  wallssp <- SpatialLines(list(world$walls))
   
   # Erase walls
   largeAndHitsWalls <- apply(value, 1, function (state) {
@@ -34,16 +32,21 @@ initValue <- function(dimx, dimy, numGoals, numActions){
   # Return only those that are not large or that do not hit a wall
 #   print(unlist(largeAndHitsWalls))
   
-  value[!largeAndHitsWalls,]
-#   value
+  rlData$value <- value[!largeAndHitsWalls,]
+  rlData$alpha <- .8
+  rlData$gamma <- 1
+  rlData$goalReward <- 1000
+  rlData$nonGoalReward <- 0
+  class(rlData) <- "msql"
+  rlData
 }
 
 
-update <- function(preRobot, posRobot, goal, action, value, reward, taxicBefore, maxValAfter){
+update.msql <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore, maxValAfter){
   # Get the max action for the robot after movement
   # Only get value from large cells
-#   maxVal <- max(getQLVals(posRobot,goal,0:3,value))
-  
+  maxVal <- max(getActionVals(rlData,posRobot,goal,0:3))
+  value <- rlData$value
   
   value[value$action==action & value$goal == goal,'value'] <- apply(
     value[value$action==action & value$goal == goal,],1,
@@ -55,16 +58,17 @@ update <- function(preRobot, posRobot, goal, action, value, reward, taxicBefore,
       val <- as.numeric(state[6])
       
       # Unnormalized version of activation
-      activation <- getActivation(preRobot$x, preRobot$y, x, y, type)
+      activation <- getActivation.msql(preRobot$x, preRobot$y, x, y, type)
   
-      activation * (val + alpha * (reward + gamma * (maxValAfter) - (val+taxicBefore))) + (1-activation) * val 
+      activation * (val + rlData$alpha * (reward + rlData$gamm * (maxVal) - (val+taxicBefore))) + (1-activation) * val 
    }
   )
 
-  value
+  rlData$value <- value
+  rlData
 }
 
-getActivation <- function(currX, currY, x, y, type){
+getActivation.msql <- function(currX, currY, x, y, type){
 #   print("Tipo ")
 #   print(type)
 #   activation <- 0
@@ -80,9 +84,9 @@ getActivation <- function(currX, currY, x, y, type){
   } else if (type == "large"){
     if (currX == x && currY == y){
       activation <- 1
-    } else if (dist(list(x=x,y=y), list(x=currX, y=currY)) <= 1){ 
+    } else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY)))<= 1){ 
       activation <- .8
-    }  else if (dist(list(x=x,y=y), list(x=currX, y=currY)) <= sqrt(2)){ 
+    }  else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY))) <= sqrt(2)){ 
       activation <- .7
     } else {
       activation <- 0
@@ -92,7 +96,9 @@ getActivation <- function(currX, currY, x, y, type){
   activation
 }
 
-stateV <- function(currX, currY,goal, action, value) {
+stateV.msql <- function(rlData, currX, currY,goal, action) {
+  value <- rlData$value
+  
   currX <- round(currX)
   currY <- round(currY)
   sum(
@@ -106,33 +112,38 @@ stateV <- function(currX, currY,goal, action, value) {
       stateVal <- as.numeric(s[6])
       
       # Normalize when calculating total value
-      activation <- getActivation(currX, currY, x, y, type) / 10
+      activation <- getActivation.msql(currX, currY, x, y, type) / 10
       
       stateVal * activation
     })
   )
 }
 
-getQLVals <- function(robot, goal,posActions, value){
+getActionVals.msql <- function(rlData, robot, goal,posActions){
   # Get the value for each action
-  sapply(posActions, function(action) stateV(robot$x, robot$y,goal,action, value))
+  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action))
   #stateV(robot$x, robot$y, posActions, value)
 }
 
-getQLActionVals <- function(robot, goal, posActions, value){
-  # Get the value for each action
-  sapply(posActions, function(action) stateV(robot$x, robot$y,goal,action, value))
-  #stateV(robot$x, robot$y, posActions, value)
+getStateValue.msql <- function(rlData, robot, goal){
+  max(getActionVals(rlData,robot,goal, 0:3))
 }
 
-reward <- function(postRobot, goalPos, eps){
+# getActionVals.msql <- function(rlData, robot, goal, posActions){
+#   value <- rlData$value
+#   # Get the value for each action
+#   sapply(posActions, function(action) stateV(robot$x, robot$y,goal,action, value))
+#   #stateV(robot$x, robot$y, posActions, value)
+# }
+
+reward.msql <- function(rlData, postRobot, goalPos, eps){
   # If in the goal
-  if (dist(postRobot, goalPos) < eps)
-    goalReward
+  if (dist(rbind(postRobot[c('x','y')], goalPos[c('x','y')])) < eps)
+    rlData$goalReward
   else 
-    nonGoalReward
+    rlData$nonGoalReward
 }
 
-getMethod <- function(){
+getMethod.msql <- function(rlData){
   "Multi-Scale QL"
 }
