@@ -1,7 +1,7 @@
 halfVisionField <- pi/2
 angleEps <- 1e-10
 
-goalVal <- 10
+goalVal <- 50
 
 
 # dist <- function(p1,p2){
@@ -24,7 +24,7 @@ visible <- function(robot, place, walls, eps){
     angleOrientDiff <-  atan2(sin(angleToGoal-robot$theta),cos(robot$theta-angleToGoal))
 #     print (angleOrientDiff)
 #     print((abs(angleOrientDiff) <= halfVisionField))
-    (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)) && dist(rbind(robot[c('x','y')], place[c('x','y')])) <= 8)
+    (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)) && dist(rbind(robot[c('x','y')], place[c('x','y')])) <= 10)
 #     (! gIntersects(wallssp, pathsp) && (abs(angleOrientDiff) <= (halfVisionField + angleEps)))
   }
  

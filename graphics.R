@@ -63,7 +63,7 @@ drawValue <- function(rlData, goal) {
   sData <- data.frame()
   for (i in 0:9){
     for (j in 0:9){
-      val <- getStateValue(rlData,data.frame(x=i,y=j),goal) / 5
+      val <- getStateValue(rlData,data.frame(x=i,y=j),goal) / explorationVal
       val <- max(min(val,1), -1)
 #       sData <- rbind(sData, data.frame(
 #         xmin = i - world$halfSquareSide, xmax =  i + world$halfSquareSide,

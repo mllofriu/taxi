@@ -3,6 +3,7 @@ library('rgeos')
 
 library('doParallel')
 library('plyr')
+library('ggplot2')
 
 source('graphics.R')
 source('movement.R')
@@ -20,7 +21,7 @@ showPlots <- FALSE
 numTrials <- 25
 numEpisodes <- 30
 
-explorationVal <- 5
+explorationVal <- 25
 forwardExplorationProb <- .3
 
 world <- initWorld()
@@ -56,16 +57,16 @@ rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
       # Choose goal random
       goal <- sample(1:4, 1)
 #             goal <- 3
-#       goal <- 4
+#       goal <- 3
       cat ("Going to goal", as.character(world$places[goal,'label']), "\n")
 
       goalLocation <- world$places[goal,c('x','y')]
-      robot <- data.frame(x=4,y=4,theta=-pi/2)
+      robot <- data.frame(x=4,y=4,theta=pi/2)
       # While the robot has not reach the goal
       while (!((dist(rbind(robot[c('x','y')],goalLocation[c('x','y')]))< world$eps ) || 
                  steps > 1000)){
         # Draw the world
-        if (showPlots && episode > 0){
+        if (showPlots && episode > 2){
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=9,y=0,theta=pi/2))){
@@ -74,7 +75,7 @@ rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
 #           }
         }
         #       
-        print(robot)
+        print(round(robot))
         # Get affordances
         posActions <- possibleActions(robot, world)
         # Get taxic values

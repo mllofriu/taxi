@@ -24,7 +24,7 @@ msql <- function(dimx, dimy, numGoals, numActions, world){
         Line(rbind(c(x,y), c(x,y+1))),
         Line(rbind(c(x,y), c(x-1,y-1))),
         Line(rbind(c(x,y), c(x+1,y+1))),
-        Line(rbind(c(x,y-1), c(x-1,y+1))),
+        Line(rbind(c(x,y), c(x-1,y+1))),
         Line(rbind(c(x,y), c(x+1,y-1)))
       ),
       "ventralConnect")
@@ -38,9 +38,9 @@ msql <- function(dimx, dimy, numGoals, numActions, world){
   
   rlData$value <- value[!largeAndHitsWalls,]
   rlData$alpha <- .8
-  rlData$gamma <- 1
-  rlData$goalReward <- 1000
-  rlData$nonGoalReward <- 0
+  rlData$gamma <- .90
+  rlData$goalReward <- 100
+  rlData$nonGoalReward <- -5
   class(rlData) <- "msql"
   rlData
 }
@@ -91,9 +91,9 @@ getActivation.msql <- function(currX, currY, x, y, type){
     if (currX == x && currY == y){
       activation <- 1
     } else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY)))<= 1){ 
-      activation <- .5
+      activation <- .8
     }  else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY))) <= sqrt(2)){ 
-      activation <- .25
+      activation <- .7
     } else {
       activation <- 0
     }
@@ -136,12 +136,12 @@ stateV.msql <- function(rlData, currX, currY,goal, action, cellType) {
 
 getActionVals.msql <- function(rlData, robot, goal,posActions){
   # Get the value for each action
-  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('small','large')))
+  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('small')))
   #stateV(robot$x, robot$y, posActions, value)
 }
 
 getStateValue.msql <- function(rlData, robot, goal){
-  max(sapply(0:3, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('small'))))
+  max(sapply(0:3, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('small','large'))))
 }
 
 # getActionVals.msql <- function(rlData, robot, goal, posActions){
