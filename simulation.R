@@ -14,7 +14,7 @@ source('msql.R')
 source('exploration.R')
 source('world.R')
 
-showPlots <- TRUE
+showPlots <- FALSE
 
 numTrials <- 100
 numEpisodes <- 50
@@ -62,11 +62,11 @@ for (method in c('msql','ql')){
       # While the robot has not reach the goal
       while (!(dist(rbind(robot[c('x','y')],goalLocation[c('x','y')]))< world$eps)){
         # Draw the world
-        if (showPlots && episode > 2){
+        if (showPlots && episode > 0){
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=9,y=0,theta=pi/2))){
-            if(steps %% 1 == 0)
+            if(steps %% 50 == 0)
               draw(robot, goal, world, rlData)
 #           }
         }
@@ -80,7 +80,7 @@ for (method in c('msql','ql')){
         # Get QL values
         # Only get action values from the small ones
         qlVals <- getActionVals(rlData,robot, goal, posActions)
-        print(qlVals)
+#         print(qlVals)
         # Exploration vals
         expVals <- getExplorationVals(posActions)
         # Get total values as the sum

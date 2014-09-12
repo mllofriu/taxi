@@ -21,7 +21,11 @@ msql <- function(dimx, dimy, numGoals, numActions, world){
         Line(rbind(c(x-1,y), c(x,y))),
         Line(rbind(c(x,y), c(x+1,y))),
         Line(rbind(c(x,y-1), c(x,y))),
-        Line(rbind(c(x,y), c(x,y+1)))
+        Line(rbind(c(x,y), c(x,y+1))),
+        Line(rbind(c(x,y), c(x-1,y-1))),
+        Line(rbind(c(x,y), c(x+1,y+1))),
+        Line(rbind(c(x,y-1), c(x-1,y+1))),
+        Line(rbind(c(x,y), c(x+1,y-1)))
       ),
       "ventralConnect")
       gIntersects(wallssp, SpatialLines(list(ventralConnectLines)))
@@ -45,7 +49,9 @@ msql <- function(dimx, dimy, numGoals, numActions, world){
 update.msql <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore, maxValAfter){
   # Get the max action for the robot after movement
   # Only get value from large cells
-  maxVal <- max(getActionVals(rlData,posRobot,goal,0:3))
+  maxVal <- max(sapply(0:3, function(action) 
+    stateV.msql(rlData,posRobot$x, posRobot$y,goal,action, c('small','large')
+                )))
   value <- rlData$value
   
   value[value$action==action & value$goal == goal,'value'] <- apply(
@@ -87,24 +93,33 @@ getActivation.msql <- function(currX, currY, x, y, type){
     } else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY)))<= 1){ 
       activation <- .8
     }  else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY))) <= sqrt(2)){ 
-      activation <- .7
+      activation <- 0
     } else {
       activation <- 0
     }
   } 
-  # Normalize activity - 1 from small , .4 + 4*.15 from large
   activation
 }
 
-stateV.msql <- function(rlData, currX, currY,goal, action) {
+stateV.msql <- function(rlData, currX, currY,goal, action, cellType) {
   value <- rlData$value
+  
+  value$activation <- 0
+  value[abs(value$x-currX) <= 2 & abs(value$y - currY) <= 2 &
+          value$action==action & value$goal == goal & value$type %in% cellType,'activation'] <- 
+    apply(value[abs(value$x-currX) <= 2 & abs(value$y - currY) <= 2 &
+                  value$action==action & value$goal == goal & value$type %in% cellType,],1, 
+          function(cell) getActivation.msql(currX, currY, cell['x'], cell['y'], cell['type']))
+  totalActivation <- sum(value$activation)
+#   print(totalActivation)
+  value$activation <- value$activation / totalActivation
   
   currX <- round(currX)
   currY <- round(currY)
   sum(
     # Only apply to nearby cells
-    apply(value[abs(value$x-currX) <= 1 & abs(value$y - currY) <= 1 &
-                  value$action==action & value$goal == goal,],1, function(s){
+    apply(value[abs(value$x-currX) <= 2 & abs(value$y - currY) <= 2 &
+                  value$action==action & value$goal == goal & value$type %in% cellType,],1, function(s){
       x <- as.numeric(s[1])
       y <- as.numeric(s[2])
       type <- s[4]
@@ -112,7 +127,7 @@ stateV.msql <- function(rlData, currX, currY,goal, action) {
       stateVal <- as.numeric(s[6])
       
       # Normalize when calculating total value
-      activation <- getActivation.msql(currX, currY, x, y, type) / 10
+      activation <- as.numeric(s[7]) 
       
       stateVal * activation
     })
@@ -121,12 +136,12 @@ stateV.msql <- function(rlData, currX, currY,goal, action) {
 
 getActionVals.msql <- function(rlData, robot, goal,posActions){
   # Get the value for each action
-  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action))
+  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('small','large')))
   #stateV(robot$x, robot$y, posActions, value)
 }
 
 getStateValue.msql <- function(rlData, robot, goal){
-  max(getActionVals(rlData,robot,goal, 0:3))
+  max(sapply(0:3, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('small'))))
 }
 
 # getActionVals.msql <- function(rlData, robot, goal, posActions){
