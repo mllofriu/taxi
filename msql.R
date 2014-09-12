@@ -91,9 +91,9 @@ getActivation.msql <- function(currX, currY, x, y, type){
     if (currX == x && currY == y){
       activation <- 1
     } else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY)))<= 1){ 
-      activation <- .8
+      activation <- .5
     }  else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY))) <= sqrt(2)){ 
-      activation <- 0
+      activation <- .25
     } else {
       activation <- 0
     }

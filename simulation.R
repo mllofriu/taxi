@@ -14,10 +14,11 @@ source('msql.R')
 source('exploration.R')
 source('world.R')
 
+# showPlots <- TRUE
 showPlots <- FALSE
 
-numTrials <- 100
-numEpisodes <- 50
+numTrials <- 25
+numEpisodes <- 30
 
 explorationVal <- 5
 forwardExplorationProb <- .3
@@ -25,7 +26,8 @@ forwardExplorationProb <- .3
 world <- initWorld()
 
 # Plot opt.
-quartz("taxi", 5, 5)
+if (showPlots)
+  quartz("taxi", 5, 5)
 
 # For each episode
 runtimes <- expand.grid(trial=1:numTrials, episode=1:numEpisodes)
@@ -36,10 +38,10 @@ if (!showPlots){
 }
 
 
-# rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
-for (method in c('msql','ql')){
-#   foreach (trial=1:numTrials,.verbose=T, .packages=c('foreach','sp','rgeos','plotrix','plyr', 'ggplot2'), .combine=rbind, .export=c(as.vector(lsf.str()))) %dopar%{
-  for (trial in 1:numTrials)  {
+rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
+# for (method in c('msql','ql')){
+  foreach (trial=1:numTrials,.verbose=T, .packages=c('foreach','sp','rgeos','plotrix','plyr', 'ggplot2'), .combine=rbind, .export=c(as.vector(lsf.str()))) %dopar%{
+#   for (trial in 1:numTrials)  {
     # Init ql value
     if (method == 'msac')
       rlData <- msac(world$xDim, world$yDim, 4, 4, world)
@@ -48,19 +50,20 @@ for (method in c('msql','ql')){
     else if (method == 'msql')
       rlData <- msql(world$xDim, world$yDim, 4, 4, world)
 
-#     foreach (episode=1:numEpisodes, .combine=rbind) %do% {
-    for(episode in 1:numEpisodes){
+    foreach (episode=1:numEpisodes, .combine=rbind) %do% {
+#     for(episode in 1:numEpisodes){
       steps <- 0
       # Choose goal random
       goal <- sample(1:4, 1)
-            goal <- 3
+#             goal <- 3
 #       goal <- 4
       cat ("Going to goal", as.character(world$places[goal,'label']), "\n")
 
       goalLocation <- world$places[goal,c('x','y')]
       robot <- data.frame(x=4,y=4,theta=-pi/2)
       # While the robot has not reach the goal
-      while (!(dist(rbind(robot[c('x','y')],goalLocation[c('x','y')]))< world$eps)){
+      while (!((dist(rbind(robot[c('x','y')],goalLocation[c('x','y')]))< world$eps ) || 
+                 steps > 1000)){
         # Draw the world
         if (showPlots && episode > 0){
           #         visible(robot, goal, world$walls, world$eps) ||
@@ -71,7 +74,7 @@ for (method in c('msql','ql')){
 #           }
         }
         #       
-#         print(robot)
+        print(robot)
         # Get affordances
         posActions <- possibleActions(robot, world)
         # Get taxic values
