@@ -1,7 +1,7 @@
 library('sp')
 library('rgeos')
 
-library('doParallel')
+# library('doParallel')
 library('plyr')
 library('ggplot2')
 
@@ -34,8 +34,13 @@ if (showPlots)
 runtimes <- expand.grid(trial=1:numTrials, episode=1:numEpisodes)
 
 if (!showPlots){
-  cl <- makeCluster(detectCores())
-  registerDoParallel(cl)
+  # Load the R MPI package if it is not already loaded.
+  if (!is.loaded("mpi_initialize")) {
+    library("Rmpi")
+    library('doMPI')
+  }
+  cl <- startMPIcluster(count=2)
+  registerDoMPI(cl)
 }
 
 
@@ -116,6 +121,7 @@ rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
 
 }
 
+closeCluster(cl)
 
 # qlRTSum <- ddply(qlRT, .(episode), summarise, meanSteps = mean(steps))
 # save(qlRTSum, qlRT, file='mlruntimes.Rdata')
