@@ -15,8 +15,8 @@ source('msql.R')
 source('exploration.R')
 source('world.R')
 
-# showPlots <- TRUE
-showPlots <- FALSE
+showPlots <- TRUE
+# showPlots <- FALSE
 
 numTrials <- 25
 numEpisodes <- 30
@@ -46,8 +46,8 @@ if (!showPlots){
 
 rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
 # for (method in c('msql','ql')){
-  foreach (trial=1:numTrials,.verbose=T, .packages=c('foreach','sp','rgeos','plotrix','plyr', 'ggplot2'), .combine=rbind, .export=c(as.vector(lsf.str()))) %dopar%{
-#   for (trial in 1:numTrials)  {
+#   foreach (trial=1:numTrials,.verbose=T, .packages=c('foreach','sp','rgeos','plotrix','plyr', 'ggplot2'), .combine=rbind, .export=c(as.vector(lsf.str()))) %dopar%{
+  for (trial in 1:numTrials)  {
     # Init ql value
     if (method == 'msac')
       rlData <- msac(world$xDim, world$yDim, 4, 4, world)

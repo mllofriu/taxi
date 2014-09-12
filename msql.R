@@ -136,7 +136,7 @@ stateV.msql <- function(rlData, currX, currY,goal, action, cellType) {
 
 getActionVals.msql <- function(rlData, robot, goal,posActions){
   # Get the value for each action
-  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('small')))
+  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('large','small')))
   #stateV(robot$x, robot$y, posActions, value)
 }
 
