@@ -39,7 +39,7 @@ msql <- function(dimx, dimy, numGoals, numActions, world){
   rlData$value <- value[!largeAndHitsWalls,]
   rlData$alpha <- .8
   rlData$gamma <- .90
-  rlData$goalReward <- 100
+  rlData$goalReward <- 1000
   rlData$nonGoalReward <- -5
   class(rlData) <- "msql"
   rlData
@@ -48,101 +48,78 @@ msql <- function(dimx, dimy, numGoals, numActions, world){
 
 update.msql <- function(rlData, preRobot, posRobot, goal, action, reward, taxicBefore, maxValAfter){
   # Get the max action for the robot after movement
-  # Only get value from large cells
-  maxVal <- max(sapply(0:3, function(action) 
-    stateV.msql(rlData,posRobot$x, posRobot$y,goal,action, c('small','large')
-                )))
-  value <- rlData$value
+  maxVal <- max(getActionVals(rlData, posRobot, goal, 0:3))
   
-  value[value$action==action & value$goal == goal,'value'] <- apply(
-    value[value$action==action & value$goal == goal,],1,
-    function (state){
-      x <- as.numeric(state[1])
-      y <- as.numeric(state[2])
-      type <- state[4]
-      action <- as.numeric(state[5])
-      val <- as.numeric(state[6])
-      
-      # Unnormalized version of activation
-      activation <- getActivation.msql(preRobot$x, preRobot$y, x, y, type)
+  active <- getActivation.msql(rlData, preRobot$x, preRobot$y , goal, action)
+  active['value'] <- active['activation'] * (active['value'] + rlData$alpha * (reward + rlData$gamm * maxVal - active['value'])) + (1-active['activation']) * active['value'] 
   
-      activation * (val + rlData$alpha * (reward + rlData$gamm * (maxVal) - (val+taxicBefore))) + (1-activation) * val 
-   }
-  )
+  # Keep subset in sync with getActivation
+  rlData$value[abs(rlData$value$x-round(preRobot$x)) <= 2 &
+                 abs(rlData$value$y - round(preRobot$y)) <= 2 &
+                 rlData$value$action==action &
+                 rlData$value$goal == goal, 'value'] <- active['value'] 
+  
+#   rows <- rlData$value$action==action & rlData$value$goal == goal & 
+#     abs(rlData$value$x-round(preRobot$x)) <= 2 & abs(rlData$value$y - round(preRobot$y)) <= 2
+#   rlData$value[rows,'value'] <- apply(
+#     rlData$value[rows,],1,
+#     function (state){
+#       x <- as.numeric(state[1])
+#       y <- as.numeric(state[2])
+#       type <- state[4]
+#       action <- as.numeric(state[5])
+#       val <- as.numeric(state[6])
+#       
+#       # Unnormalized version of activation
+#       activation <- getActivation.msql(preRobot$x, preRobot$y, x, y, type)
+#   
+#       activation * (val + rlData$alpha * (reward + rlData$gamm * (maxVal) - (val+taxicBefore))) + (1-activation) * val 
+#    }
+#   )
 
-  rlData$value <- value
   rlData
 }
 
-getActivation.msql <- function(currX, currY, x, y, type){
-#   print("Tipo ")
-#   print(type)
-#   activation <- 0
+getActivation.msql <- function(rlData,currX, currY, goal, action){
+
   currX <- round(currX)
   currY <- round(currY)
   
-  if (type == "small"){
-    if (currX == x && currY == y)
-      # if the current cell is the state cell, full value
-      activation <- 1
-    else
-      activation <- 0
-  } else if (type == "large"){
-    if (currX == x && currY == y){
-      activation <- 1
-    } else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY)))<= 1){ 
-      activation <- .8
-    }  else if (dist(rbind(c(x=x,y=y), c(x=currX, y=currY))) <= sqrt(2)){ 
-      activation <- .7
-    } else {
-      activation <- 0
-    }
-  } 
-  activation
+  active <- rlData$value[
+    abs(rlData$value$x-currX) <= 2 &
+    abs(rlData$value$y - currY) <= 2 &
+    rlData$value$action==action &
+    rlData$value$goal == goal,]
+  
+  active['activation'] <- 0
+  active[active$x == currX && active$y == currY, 'activation'] <- 1
+  active[active$type == 'large' & 
+           (abs(active$x-currX) == 1 & abs(active$y - currY) == 0),'activation' ] <- .8
+  active[active$type == 'large' & 
+           (abs(active$x-currX) == 0 & abs(active$y - currY) == 1),'activation' ] <- .8
+  active[active$type == 'large' &
+           (abs(active$x-currX) == 1 & abs(active$y - currY) == 1),'activation' ] <- .7
+  
+  active
 }
 
-stateV.msql <- function(rlData, currX, currY,goal, action, cellType) {
-  value <- rlData$value
+stateV.msql <- function(rlData, currX, currY,goal, action) {
+  active <- getActivation.msql(rlData, currX, currY, goal, action)
   
-  value$activation <- 0
-  
-  value[abs(value$x-currX) <= 2 & abs(value$y - currY) <= 2 &
-          value$action==action & value$goal == goal & value$type %in% cellType,'activation'] <- 
-    apply(value[abs(value$x-currX) <= 2 & abs(value$y - currY) <= 2 &
-                  value$action==action & value$goal == goal & value$type %in% cellType,],1, 
-          function(cell) getActivation.msql(currX, currY, cell['x'], cell['y'], cell['type']))
-  totalActivation <- sum(value$activation)
-#   print(totalActivation)
-  value$activation <- value$activation / totalActivation
-  
-  currX <- round(currX)
-  currY <- round(currY)
-  sum(
-    # Only apply to nearby cells
-    apply(value[abs(value$x-currX) <= 2 & abs(value$y - currY) <= 2 &
-                  value$action==action & value$goal == goal & value$type %in% cellType,],1, function(s){
-      x <- as.numeric(s[1])
-      y <- as.numeric(s[2])
-      type <- s[4]
-#       cat('type is ', type, '\n')
-      stateVal <- as.numeric(s[6])
-      
-      # Normalize when calculating total value
-      activation <- as.numeric(s[7]) 
-      
-      stateVal * activation
-    })
-  )
+  totalActivation <- sum(active$activation)
+  active$activation <- active$activation / totalActivation
+
+  sum(active$activation * active$value)
 }
 
 getActionVals.msql <- function(rlData, robot, goal,posActions){
   # Get the value for each action
-  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('large','small')))
+  sapply(posActions, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action))
   #stateV(robot$x, robot$y, posActions, value)
 }
 
 getStateValue.msql <- function(rlData, robot, goal){
-  max(sapply(0:3, function(action) stateV.msql(rlData,robot$x, robot$y,goal,action, c('small','large'))))
+  max(getActionVals(rlData, robot, goal, 0:3))
 }
 
 # getActionVals.msql <- function(rlData, robot, goal, posActions){

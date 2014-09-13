@@ -1,7 +1,7 @@
 library('sp')
 library('rgeos')
 
-# library('doParallel')
+library('doParallel')
 library('plyr')
 library('ggplot2')
 
@@ -37,7 +37,7 @@ if (!showPlots){
   # Load the R MPI package if it is not already loaded.
   library("Rmpi")
   library('doMPI')
-  cl <- startMPIcluster(count=2)
+  cl <- startMPIcluster(count=100)
   registerDoMPI(cl)
 }
 
@@ -59,7 +59,6 @@ rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
       steps <- 0
       # Choose goal random
       goal <- sample(1:4, 1)
-#             goal <- 3
 #       goal <- 3
       cat ("Going to goal", as.character(world$places[goal,'label']), "\n")
 
@@ -73,7 +72,7 @@ rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=10,y=10,theta=pi/2))){
-            if(steps %% 50 == 0)
+            if(steps %% 500 == 0)
               draw(robot, goal, world, rlData)
 #           }
         }
