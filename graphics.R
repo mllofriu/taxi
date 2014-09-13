@@ -54,15 +54,15 @@ drawWalls <- function(walls){
 
 # Draw the interest places
 drawPlaces <- function(places){
-  text(places$x, places$y, places$label, cex=2)
+  text(places$x, places$y, places$label, cex=.5)
 #   geom_text(data=places, aes(x=x,y=y,label=label), size = 10)
 }
 
 # Draw ql value
-drawValue <- function(rlData, goal) {
+drawValue <- function(rlData, goal, world) {
   sData <- data.frame()
-  for (i in 0:9){
-    for (j in 0:9){
+  for (i in 0:(world$xDim-1)){
+    for (j in 0:(world$yDim-1)){
       val <- getStateValue(rlData,data.frame(x=i,y=j),goal) / explorationVal
       val <- max(min(val,1), -1)
 #       sData <- rbind(sData, data.frame(
@@ -88,7 +88,7 @@ draw <- function(robot, goal, world, rlData=NULL){
        ylim=c(0 - world$halfSquareSide,world$yDim -1  + world$halfSquareSide),
        xaxt='n', yaxt='n', ylab="", xlab="")
   if (!is.null(rlData))
-    drawValue(rlData, goal)
+    drawValue(rlData, goal, world)
   drawGrid(world$xDim,world$yDim)
   drawRobot(robot, world)
   drawWalls(world$walls)

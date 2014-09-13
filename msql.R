@@ -105,6 +105,7 @@ stateV.msql <- function(rlData, currX, currY,goal, action, cellType) {
   value <- rlData$value
   
   value$activation <- 0
+  
   value[abs(value$x-currX) <= 2 & abs(value$y - currY) <= 2 &
           value$action==action & value$goal == goal & value$type %in% cellType,'activation'] <- 
     apply(value[abs(value$x-currX) <= 2 & abs(value$y - currY) <= 2 &

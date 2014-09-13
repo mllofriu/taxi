@@ -15,11 +15,11 @@ source('msql.R')
 source('exploration.R')
 source('world.R')
 
-showPlots <- TRUE
-# showPlots <- FALSE
+# showPlots <- TRUE
+showPlots <- FALSE
 
-numTrials <- 25
-numEpisodes <- 30
+numTrials <- 100
+numEpisodes <- 100
 
 explorationVal <- 25
 forwardExplorationProb <- .3
@@ -35,10 +35,8 @@ runtimes <- expand.grid(trial=1:numTrials, episode=1:numEpisodes)
 
 if (!showPlots){
   # Load the R MPI package if it is not already loaded.
-  if (!is.loaded("mpi_initialize")) {
-    library("Rmpi")
-    library('doMPI')
-  }
+  library("Rmpi")
+  library('doMPI')
   cl <- startMPIcluster(count=2)
   registerDoMPI(cl)
 }
@@ -46,8 +44,8 @@ if (!showPlots){
 
 rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
 # for (method in c('msql','ql')){
-#   foreach (trial=1:numTrials,.verbose=T, .packages=c('foreach','sp','rgeos','plotrix','plyr', 'ggplot2'), .combine=rbind, .export=c(as.vector(lsf.str()))) %dopar%{
-  for (trial in 1:numTrials)  {
+  foreach (trial=1:numTrials,.verbose=T, .packages=c('foreach','sp','rgeos','plotrix','plyr', 'ggplot2'), .combine=rbind, .export=c(as.vector(lsf.str()))) %dopar%{
+#   for (trial in 1:numTrials)  {
     # Init ql value
     if (method == 'msac')
       rlData <- msac(world$xDim, world$yDim, 4, 4, world)
@@ -66,21 +64,22 @@ rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
       cat ("Going to goal", as.character(world$places[goal,'label']), "\n")
 
       goalLocation <- world$places[goal,c('x','y')]
-      robot <- data.frame(x=4,y=4,theta=pi/2)
+      robot <- data.frame(x=10,y=10,theta=pi/2)
       # While the robot has not reach the goal
       while (!((dist(rbind(robot[c('x','y')],goalLocation[c('x','y')]))< world$eps ) || 
-                 steps > 1000)){
+                 steps > 10000)){
         # Draw the world
-        if (showPlots && episode > 2){
+        if (showPlots && episode > 0){
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
-#             all(robot == data.frame(x=9,y=0,theta=pi/2))){
+#             all(robot == data.frame(x=10,y=10,theta=pi/2))){
             if(steps %% 50 == 0)
               draw(robot, goal, world, rlData)
 #           }
         }
-        #       
-        print(round(robot))
+        #      
+        if (showPlots)
+          print(round(robot))
         # Get affordances
         posActions <- possibleActions(robot, world)
         # Get taxic values
