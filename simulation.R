@@ -124,10 +124,14 @@ closeCluster(cl)
 # qlRTSum <- ddply(qlRT, .(episode), summarise, meanSteps = mean(steps))
 # save(qlRTSum, qlRT, file='mlruntimes.Rdata')
 # qplot(episode, meanSteps, data=qlRTSum)
+rte[rte$episode>=90 & rte$steps > 1000 & rte$method == 'Multi-Scale QL',]
 
 rteSum <- ddply(rte, .(episode, method), summarise, meanSteps = mean(steps))
 rte.aov <- aov(steps ~ factor(episode):method, data=rte)
 tuk <- TukeyHSD(rte.aov)
+index <- foreach (i=1:numEpisodes) %do% paste(i,":Normal QL-",i,":Multi-Scale QL",sep="")
+ps <- tuk$"factor(episode):method"[unlist(index),'p adj']
+ps < 0.05
 save (rte, file="rte.Rdata")
 names(rteSum)[names(rteSum) == "method"] <- "Method"
 pdf('rte.pdf')
