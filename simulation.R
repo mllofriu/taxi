@@ -18,8 +18,8 @@ source('world.R')
 # showPlots <- TRUE
 showPlots <- FALSE
 
-numTrials <- 100
-numEpisodes <- 100
+numTrials <- 1
+numEpisodes <- 1
 
 explorationVal <- 25
 forwardExplorationProb <- .3
@@ -43,7 +43,7 @@ if (!showPlots){
 
 
 rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
-# for (method in c('msql','ql')){
+# for (method in c('ql','msql')){
   foreach (trial=1:numTrials,.verbose=T, .packages=c('foreach','sp','rgeos','plotrix','plyr', 'ggplot2'), .combine=rbind, .export=c(as.vector(lsf.str()))) %dopar%{
 #   for (trial in 1:numTrials)  {
     # Init ql value
@@ -68,12 +68,15 @@ rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
       while (!((dist(rbind(robot[c('x','y')],goalLocation[c('x','y')]))< world$eps ) || 
                  steps > 10000)){
         # Draw the world
-        if (showPlots && episode > 0){
+        if (showPlots && episode == 3){
           #         visible(robot, goal, world$walls, world$eps) ||
 #           if ( 
 #             all(robot == data.frame(x=10,y=10,theta=pi/2))){
-            if(steps %% 500 == 0)
+            if(steps %% 500 == 0){
+              png('snapshot.png')
               draw(robot, goal, world, rlData)
+              dev.off()
+            }
 #           }
         }
         #      
@@ -119,7 +122,10 @@ rte <- foreach (method=c('msql','ql'), .combine=rbind) %do% {
 
 }
 
-closeCluster(cl)
+if (!showPlots){
+  closeCluster(cl)
+}
+
 
 # qlRTSum <- ddply(qlRT, .(episode), summarise, meanSteps = mean(steps))
 # save(qlRTSum, qlRT, file='mlruntimes.Rdata')
@@ -129,14 +135,18 @@ rte[rte$episode>=90 & rte$steps > 1000 & rte$method == 'Multi-Scale QL',]
 rteSum <- ddply(rte, .(episode, method), summarise, meanSteps = mean(steps))
 rte.aov <- aov(steps ~ factor(episode):method, data=rte)
 tuk <- TukeyHSD(rte.aov)
-index <- foreach (i=1:numEpisodes) %do% paste(i,":Normal QL-",i,":Multi-Scale QL",sep="")
+index <- foreach (i=1:numEpisodes) %do% paste(i,":Canonical QL-",i,":Multi-Scale QL",sep="")
 ps <- tuk$"factor(episode):method"[unlist(index),'p adj']
 ps < 0.05
 save (rte, file="rte.Rdata")
 names(rteSum)[names(rteSum) == "method"] <- "Method"
+# png('rte.png')
 pdf('rte.pdf')
 qplot(episode, meanSteps, data=rteSum, geom=c('point', 'line'), color=Method) +
   ylab("Num. of Steps") + xlab("Episode") + 
-  theme(legend.text = element_text(size=16), legend.title = element_text(size=16))
+  theme(legend.text = element_text(size=16), legend.title = element_text(size=16)) +
+  theme(legend.position = c(1, 1), 
+       legend.justification = c(1, 1),
+       legend.background = element_rect(colour = NA, fill = NA))
 dev.off()
 

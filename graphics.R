@@ -54,7 +54,7 @@ drawWalls <- function(walls){
 
 # Draw the interest places
 drawPlaces <- function(places){
-  text(places$x, places$y, places$label, cex=.5)
+  text(places$x, places$y, places$label, cex=1)
 #   geom_text(data=places, aes(x=x,y=y,label=label), size = 10)
 }
 

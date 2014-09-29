@@ -11,8 +11,8 @@ ql <- function(dimx, dimy, numGoals, numActions){
   
   rlData$alpha <- .8
   rlData$gamma <- 1
-  rlData$goalReward <- 100
-  rlData$nonGoalReward <- -.1
+  rlData$goalReward <- 1000
+  rlData$nonGoalReward <- -5
     
   class(rlData) <- "ql"
   rlData
