@@ -4,7 +4,7 @@ require('graphics')
 # Function to draw the robot
 # Robot should have x, y and theta columns
 drawRobot <- function(robot, world){
-  draw.circle(x=robot$x, y=robot$y, world$robotDiam/2)
+  draw.circle(x=robot$x, y=robot$y, world$robotDiam/2,border="slateblue")
   
   # Orientation line
 #   orientLine <- data.frame(
@@ -13,7 +13,7 @@ drawRobot <- function(robot, world){
 #     xend=robot$x+world$robotDiam/2*cos(robot$theta),
 #     yend=robot$y+world$robotDiam/2*sin(robot$theta))
   lines(x=c(robot$x, robot$x+world$robotDiam/2*cos(robot$theta)), 
-        y=c(robot$y, robot$y+world$robotDiam/2*sin(robot$theta)))
+        y=c(robot$y, robot$y+world$robotDiam/2*sin(robot$theta)), col="slateblue")
 #   
 #   # Return both the line and a circle
 #   list(geom_path(data=circleFun(c(robot$x,robot$y), diameter=world$robotDiam), aes(x=x,y=y), color="gold4"),
@@ -54,7 +54,7 @@ drawWalls <- function(walls){
 
 # Draw the interest places
 drawPlaces <- function(places){
-  text(places$x, places$y, places$label, cex=1)
+  text(places$x, places$y, places$label, cex=1, col="slateblue", font=2)
 #   geom_text(data=places, aes(x=x,y=y,label=label), size = 10)
 }
 
@@ -87,8 +87,8 @@ draw <- function(robot, goal, world, rlData=NULL){
   plot(NULL,xlim=c(0 - world$halfSquareSide,world$xDim -1 + world$halfSquareSide),
        ylim=c(0 - world$halfSquareSide,world$yDim -1  + world$halfSquareSide),
        xaxt='n', yaxt='n', ylab="", xlab="")
-  if (!is.null(rlData))
-    drawValue(rlData, goal, world)
+#   if (!is.null(rlData))
+#     drawValue(rlData, goal, world)
   drawGrid(world$xDim,world$yDim)
   drawRobot(robot, world)
   drawWalls(world$walls)
