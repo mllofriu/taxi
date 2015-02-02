@@ -83,6 +83,7 @@ drawValue <- function(rlData, goal, world) {
 # Draw the world and robot
 draw <- function(robot, goal, world, rlData=NULL){
   # If there is no base plot, replot the whole thing
+  print("Plotting")
   dev.hold()
   plot(NULL,xlim=c(0 - world$halfSquareSide,world$xDim -1 + world$halfSquareSide),
        ylim=c(0 - world$halfSquareSide,world$yDim -1  + world$halfSquareSide),

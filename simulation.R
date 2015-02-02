@@ -15,16 +15,16 @@ source('msql.R')
 source('exploration.R')
 source('world.R')
 
-showPlots <- TRUE
-# showPlots <- FALSE
+# showPlots <- TRUE
+showPlots <- FALSE
 
 numTrials <- 100
-numEpisodes <- 100
+numEpisodes <- 25
 
 explorationVal <- 25
 forwardExplorationProb <- .3
 
-world <- initWorld()
+world <- initWorld(FALSE)
 
 # Plot opt.
 if (showPlots)
@@ -60,8 +60,8 @@ rte <- foreach (method=c('ql','msql'), .combine=rbind) %do% {
 #     for(episode in 1:numEpisodes){
       steps <- 0
       # Choose goal random
-      goal <- sample(1:4, 1)
-#       goal <- 3
+#       goal <- sample(1:4, 1)
+      goal <- 1
       cat ("Going to goal", as.character(world$places[goal,'label']), "\n")
 
       goalLocation <- world$places[goal,c('x','y')]
@@ -117,7 +117,6 @@ rte <- foreach (method=c('ql','msql'), .combine=rbind) %do% {
         steps <- steps + 1
 #               Sys.sleep(1)
       }
-      
       data.frame(trial=trial, episode=episode, steps=steps, method=getMethod(rlData))  
     }
   }
@@ -125,19 +124,20 @@ rte <- foreach (method=c('ql','msql'), .combine=rbind) %do% {
 }
 
 if (!showPlots){
-  closeCluster(cl)
+#   closeCluster(cl)
+  stopCluster(cl)
 }
 
 
 # qlRTSum <- ddply(qlRT, .(episode), summarise, meanSteps = mean(steps))
 # save(qlRTSum, qlRT, file='mlruntimes.Rdata')
 # qplot(episode, meanSteps, data=qlRTSum)
-rte[rte$episode>=90 & rte$steps > 1000 & rte$method == 'Multi-Scale QL',]
+#rte[rte$episode>=90 & rte$steps > 1000 & rte$method == 'Multi-Scale QL',]
 
 rteSum <- ddply(rte, .(episode, method), summarise, meanSteps = mean(steps))
 rte.aov <- aov(steps ~ factor(episode):method, data=rte)
 tuk <- TukeyHSD(rte.aov)
-index <- foreach (i=1:numEpisodes) %do% paste(i,":Normal QL-",i,":Multi-Scale QL",sep="")
+index <- foreach (i=1:numEpisodes) %do% paste(i,":Multi-Scale QL-",i,":Normal QL",sep="")
 ps <- tuk$"factor(episode):method"[unlist(index),'p adj']
 ps < 0.05
 save (rte, file="rte.Rdata")

@@ -1,7 +1,7 @@
 library('sp')
 library('rgeos')
 
-initWorld <- function(){
+initWorld <- function(withInnerWalls){
   # World object
   world <- list()
   class(world) <- "world"
@@ -14,12 +14,15 @@ initWorld <- function(){
   # Epsilon for position comparison
   world$eps <- 1e-10
   # Interesting places
-  label=c('Y', 'R', 'B', 'G')
-  x <- c(0,0,12,19)
-  y <- c(0,19,0,19)
+  #label=c('Y', 'R', 'B', 'G')
+  #x <- c(0,0,12,19)
+  #y <- c(0,19,0,19)
+  label=c('G')
+  x <- c(10)
+  y <- c(0)
   world$places=data.frame(x,y,label)
   # Walls
-  world$walls <- Lines(list(
+  if (withInnerWalls){world$walls <- Lines(list(
     Line(rbind(c(4,0) - world$halfSquareSide, c(4,8) - world$halfSquareSide)),
     Line(rbind(c(12,0) - world$halfSquareSide, c(12,8) - world$halfSquareSide)),
     Line(rbind(c(8,20) - world$halfSquareSide, c(8,12) - world$halfSquareSide)),
@@ -29,6 +32,16 @@ initWorld <- function(){
     Line(rbind(c(0,20) - world$halfSquareSide, c(20,20) - world$halfSquareSide))
   ),
   "walls")
+  } else {
+    world$walls <- Lines(list(
+      Line(rbind(c(0,0) - world$halfSquareSide, c(0,20) - world$halfSquareSide)),
+      Line(rbind(c(20,0) - world$halfSquareSide, c(20,20) - world$halfSquareSide)),
+      Line(rbind(c(0,0) - world$halfSquareSide, c(20,0) - world$halfSquareSide)),
+      Line(rbind(c(0,20) - world$halfSquareSide, c(20,20) - world$halfSquareSide))
+    ),
+    "walls")
+  }
+  
   
   world
 }
