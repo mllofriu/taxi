@@ -18,17 +18,14 @@ source('world.R')
 # showPlots <- TRUE
 showPlots <- FALSE
 
-numTrials <- 100
-numEpisodes <- 25
+numTrials <- 1
+numEpisodes <- 100
 
 explorationVal <- 25
 forwardExplorationProb <- .3
 
-world <- initWorld(FALSE)
+world <- initWorld(TRUE)
 
-# Plot opt.
-if (showPlots)
-  quartz("taxi", 5, 5)
 
 # For each episode
 runtimes <- expand.grid(trial=1:numTrials, episode=1:numEpisodes)

@@ -1,5 +1,4 @@
-load(file = '100trialsmlqlvsqlWith8NeighVentralDoingAction.Rdata')
-load(file = 'bothRuntimes.Rdata')
+load(file = 'rte.Rdata')
 
 require(ggplot2)
 data <- rte
