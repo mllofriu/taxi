@@ -32,8 +32,8 @@ forwardExplorationProb <- .3
 world <- initWorld(TRUE)
 
 
-rte <- foreach (method=c('ql', 'msql')) %do%{
-  foreach (trial=1:numTrials) %do%{
+rte <- foreach (method=c('ql', 'msql'), .combine=rbind) %do%{
+  foreach (trial=1:numTrials, .combine=rbind) %do%{
     # Init ql value
     if (method == 'msac')
       rlData <- msac(world$xDim, world$yDim, 4, 4, world)
